@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konfiguracja HomeAIVision",
+        "description": "Wprowadź szczegóły swojej konfiguracji analizy kamery.",
+        "data": {
+          "azure_api_key": "Klucz API Azure",
+          "azure_endpoint": "Endpoint Azure",
+          "cam_url": "URL Kamery",
+          "max_images": "Maksymalna liczba zdjęć",
+          "time_between_requests": "Czas między żądaniami (w sekundach)",
+          "organize_by_day": "Organizuj zdjęcia w folderach dzienne",
+          "days_to_keep": "Ilość dni przechowywania zdjęć",
+          "send_notifications": "Wysyłaj powiadomienia przy wykryciu osoby",
+          "notification_language": "Język powiadomień"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć z podanymi detalami",
+      "invalid_auth": "Nieprawidłowe dane uwierzytelniające",
+      "unknown": "Wystąpił nieznany błąd",
+      "azure_credentials_invalid": "Dane uwierzytelniające Azure są nieprawidłowe. Proszę sprawdzić swój klucz API i endpoint.",
+      "camera_url_invalid": "URL kamery jest nieprawidłowy. Upewnij się, że zaczyna się od http:// lub https://"
+    },
+    "success": {
+      "setup": "Konfiguracja analizy obrazu z kamery zakończona sukcesem. Restart Home Assistant jest wymagany, aby integracja zaczęła działać."
+    }
+  },
+  "message": {
+    "person_detected": "Wykryto osobę!"
+  }
+}

@@ -1,0 +1,36 @@
+# General Python ignores
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.swp
+*~
+
+# Virtual environment
+venv/
+.env
+
+# Home Assistant ignores
+deps/
+.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+
+# Operating system files
+.DS_Store  # macOS-specific files
+Thumbs.db  # Windows-specific files
+desktop.ini  # Windows-specific files
+
+# Node modules for any frontend development
+node_modules/
+
+# Logs
+*.log
+*.csv
+
+# Local secrets
+secrets.yaml
+
+# Ignore the local configuration file
+config_entries.json

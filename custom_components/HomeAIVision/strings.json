@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HomeAIVision",
+        "description": "Enter the details for your camera analysis setup.",
+        "data": {
+          "azure_api_key": "Azure API Key",
+          "azure_endpoint": "Azure Endpoint",
+          "cam_url": "Camera URL",
+          "max_images": "Maximum number of images",
+          "time_between_requests": "Time between requests (seconds)",
+          "organize_by_day": "Organize images in folders by day",
+          "days_to_keep": "Days to keep images",
+          "send_notifications": "Send notifications on person detection",
+          "notification_language": "Notification language"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect with the provided details",
+      "invalid_auth": "Invalid authentication credentials",
+      "unknown": "An unknown error occurred",
+      "azure_credentials_invalid": "Azure credentials are invalid. Please check your API key and endpoint.",
+      "camera_url_invalid": "Camera URL is invalid. Please ensure it starts with http:// or https://"
+    },
+    "success": {
+      "setup": "Camera image analysis configuration completed successfully. Restarting Home Assistant is required for the integration to start working."
+    }
+  },
+  "message": {
+    "person_detected": "Person detected!"
+  }
+}

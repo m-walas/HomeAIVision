@@ -7,7 +7,6 @@ Welcome to **HomeAIVision**! I'm here to make your home safer and smarter by bri
 ![Home Assistant](https://img.shields.io/badge/Home_Assistant-Custom_Component-blue.svg?style=for-the-badge&logo=homeassistant)
 ![Azure Cognitive Services](https://img.shields.io/badge/Azure_Cognitive_Services-Enabled-lightgrey.svg?style=for-the-badge&logo=microsoftazure)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-Donate-orange.svg?style=for-the-badge&logo=buymeacoffee)](https://buymeacoffee.com/mwalas)
 
 ## Prerequisites
 
@@ -69,6 +68,8 @@ Before installing HomeAIVision, ensure you have:
 ## Support the Project
 
 Encounter issues or have suggestions? Please report them on our [Issues page](https://github.com/m-walas/HomeAIVision/issues). Your feedback helps improve HomeAIVision!
+
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-Donate-orange.svg?style=for-the-badge&logo=buymeacoffee)](https://buymeacoffee.com/mwalas)
 
 ## License
 

@@ -46,6 +46,8 @@ Before installing HomeAIVision, ensure you have:
 | `send_notifications` | Enable or disable notifications. | `False` |
 | `organize_by_day` | Organize saved images by day. | `True` |
 
+![config_flow](images/config_flow.png)
+
 ### Additional Options
 | Parameter | Description | Default |
 |-----------|-------------|---------|

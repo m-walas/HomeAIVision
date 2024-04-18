@@ -25,7 +25,7 @@
       "camera_url_invalid": "Camera URL is invalid. Please ensure it starts with http:// or https://"
     },
     "success": {
-      "setup": "Camera image analysis configuration completed successfully. Restarting Home Assistant is required for the integration to start working."
+      "setup": "HomeAIVision configuration completed successfully. Restarting Home Assistant is required for the integration to start working."
     }
   },
   "message": {

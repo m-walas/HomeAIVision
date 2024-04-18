@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Konfiguracja HomeAIVision",
-        "description": "Wprowadź szczegóły swojej konfiguracji analizy kamery.",
+        "description": "Wprowadź szczegóły swojej konfiguracji.",
         "data": {
           "azure_api_key": "Klucz API Azure",
           "azure_endpoint": "Endpoint Azure",
@@ -25,7 +25,7 @@
       "camera_url_invalid": "URL kamery jest nieprawidłowy. Upewnij się, że zaczyna się od http:// lub https://"
     },
     "success": {
-      "setup": "Konfiguracja analizy obrazu z kamery zakończona sukcesem. Restart Home Assistant jest wymagany, aby integracja zaczęła działać."
+      "setup": "Konfiguracja HomeAIVision zakończona sukcesem. Restart Home Assistant jest wymagany, aby integracja zaczęła działać."
     }
   },
   "message": {

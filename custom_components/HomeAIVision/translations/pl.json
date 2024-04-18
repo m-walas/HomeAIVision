@@ -3,32 +3,29 @@
     "step": {
       "user": {
         "title": "Konfiguracja HomeAIVision",
-        "description": "Wprowadź szczegóły swojej konfiguracji.",
+        "description": "Wprowadź szczegóły konfiguracji.",
         "data": {
-          "azure_api_key": "Klucz API Azure",
-          "azure_endpoint": "Endpoint Azure",
-          "cam_url": "URL Kamery",
-          "max_images": "Maksymalna liczba zdjęć",
-          "time_between_requests": "Czas między żądaniami (w sekundach)",
-          "organize_by_day": "Organizuj zdjęcia w folderach dzienne",
-          "days_to_keep": "Ilość dni przechowywania zdjęć",
-          "send_notifications": "Wysyłaj powiadomienia przy wykryciu osoby",
-          "notification_language": "Język powiadomień"
+          "azure_api_key": "Klucz API Azure.",
+          "azure_endpoint": "Adres URL endpointu Azure.",
+          "cam_url": "Adres URL do strumienia kamery.",
+          "time_between_requests": "Ustaw interwał czasowy (w sekundach) między żądaniami.",
+          "send_notifications": "Wysyłanie powiadomień przy wykryciu.",
+          "organize_by_day": "Organizowanie obrazów według dni."
+        }
+      },
+      "additional_options": {
+        "title": "Dodatkowe Ustawienia",
+        "description": "Konfiguracja dodatkowych opcji dotyczących przechowywania obrazów i powiadomień.",
+        "data": {
+          "max_images": "Ustaw maksymalną liczbę przechowywanych zdjęć na dzień lub łącznie.",
+          "days_to_keep": "Określ, ile dni przechowywać obrazy, jeśli są organizowane według dni.",
+          "notification_language": "Wybierz język powiadomień."
         }
       }
     },
     "error": {
-      "cannot_connect": "Nie udało się połączyć z podanymi detalami",
-      "invalid_auth": "Nieprawidłowe dane uwierzytelniające",
-      "unknown": "Wystąpił nieznany błąd",
-      "azure_credentials_invalid": "Dane uwierzytelniające Azure są nieprawidłowe. Proszę sprawdzić swój klucz API i endpoint.",
-      "camera_url_invalid": "URL kamery jest nieprawidłowy. Upewnij się, że zaczyna się od http:// lub https://"
-    },
-    "success": {
-      "setup": "Konfiguracja HomeAIVision zakończona sukcesem. Restart Home Assistant jest wymagany, aby integracja zaczęła działać."
+      "azure_credentials_invalid": "Twoje dane uwierzytelniające Azure są nieprawidłowe. Sprawdź swój klucz API i adres URL endpointu.",
+      "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://."
     }
-  },
-  "message": {
-    "person_detected": "Wykryto osobę!"
   }
 }

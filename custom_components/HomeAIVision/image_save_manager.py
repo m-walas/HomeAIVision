@@ -58,6 +58,11 @@ def clean_up_old_images(base_path, days_to_keep):
         base_path (str): The base directory where images are saved.
         days_to_keep (int): Number of days to keep images before deletion.
     """
+    if not os.path.exists(base_path):
+        os.makedirs(base_path, exist_ok=True)
+        _LOGGER.info(f"Created directory: {base_path}")
+        return
+
     today = datetime.now()
     for folder_name in os.listdir(base_path):
         folder_path = os.path.join(base_path, folder_name)
@@ -66,7 +71,7 @@ def clean_up_old_images(base_path, days_to_keep):
                 folder_date = datetime.strptime(folder_name, "%Y-%m-%d")
                 if (today - folder_date).days > days_to_keep:
                     shutil.rmtree(folder_path)
-                    _LOGGER.info(f"Deleted old image folder: {folder_path}")
+                    print(f"Deleted old image folder: {folder_path}")
             except ValueError:
-                #! Folder name does not match date format, ignore
-                pass
+                #! Ignore directories that do not match the expected date format
+                continue

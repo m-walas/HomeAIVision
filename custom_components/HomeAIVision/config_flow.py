@@ -23,12 +23,9 @@ from .const import (
 async def verify_azure_credentials(azure_api_key, azure_endpoint):
     headers = {'Ocp-Apim-Subscription-Key': azure_api_key}
     test_url = azure_endpoint.rstrip("/") + "/vision/v3.0/analyze"
-    
     async with aiohttp.ClientSession() as session:
         async with session.post(test_url, headers=headers) as response:
-            if response.status == 401:  # Unauthorized
-                return False
-    return True
+            return response.status != 401
 
 
 # Helper function to check if the camera URL is properly formatted.
@@ -37,13 +34,9 @@ def verify_camera_url(cam_url):
     return cam_url.startswith("http://") or cam_url.startswith("https://")
 
 
-class CameraAnalysisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     temp_config = {}
-
-    def __init__(self):
-        self.temp_config = {}
-
 
     async def async_step_user(self, user_input=None):
         errors = {}
@@ -77,27 +70,26 @@ class CameraAnalysisConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_additional_options(self, user_input=None):
         errors = {}
-        
         if user_input is not None:
             self.temp_config.update(user_input)
-            return self.async_create_entry(title="Camera Analysis", data=self.temp_config)
+            return self.async_create_entry(title="HomeAIVision", data=self.temp_config)
 
-        fields = {}
-        fields[vol.Required(CONF_MAX_IMAGES, default=30)] = cv.positive_int
-        if self.temp_config[CONF_ORGANIZE_BY_DAY]:
+        fields = {
+            vol.Required(CONF_MAX_IMAGES, default=30): cv.positive_int,
+        }
+        if self.temp_config.get(CONF_ORGANIZE_BY_DAY, True):
             fields[vol.Required(CONF_DAYS_TO_KEEP, default=7)] = cv.positive_int
-
-        if self.temp_config[CONF_SEND_NOTIFICATIONS]:
+        if self.temp_config.get(CONF_SEND_NOTIFICATIONS, False):
             fields[vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en')] = vol.In({'en': 'English', 'pl': 'Polski'})
 
         return self.async_show_form(
             step_id="additional_options",
             data_schema=vol.Schema(fields),
-            errors=errors,
+            errors={},
         )
 
 
-class CameraAnalysisOptionsFlow(config_entries.OptionsFlow):
+class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
 
@@ -105,18 +97,14 @@ class CameraAnalysisOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # Options form, similar to the main configuration but for updating settings
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
-                vol.Required(CONF_AZURE_API_KEY): str,
-                vol.Required(CONF_AZURE_ENDPOINT): str,
-                vol.Required(CONF_CAM_URL): str,
-                vol.Required(CONF_MAX_IMAGES, default=30): cv.positive_int,
-                vol.Required(CONF_TIME_BETWEEN_REQUESTS, default=30): cv.positive_int,
-                vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
-                vol.Optional(CONF_DAYS_TO_KEEP, default=7): cv.positive_int,
-                vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
-                vol.Optional(CONF_NOTIFICATION_LANGUAGE, default='en'): vol.In({'en': 'English', 'pl': 'Polski'}),
+                vol.Required(CONF_MAX_IMAGES, default=self.config_entry.options.get(CONF_MAX_IMAGES, 30)): cv.positive_int,
+                vol.Required(CONF_TIME_BETWEEN_REQUESTS, default=self.config_entry.options.get(CONF_TIME_BETWEEN_REQUESTS, 30)): cv.positive_int,
+                vol.Optional(CONF_ORGANIZE_BY_DAY, default=self.config_entry.options.get(CONF_ORGANIZE_BY_DAY, True)): bool,
+                vol.Optional(CONF_DAYS_TO_KEEP, default=self.config_entry.options.get(CONF_DAYS_TO_KEEP, 7)): cv.positive_int,
+                vol.Optional(CONF_SEND_NOTIFICATIONS, default=self.config_entry.options.get(CONF_SEND_NOTIFICATIONS, False)): bool,
+                vol.Optional(CONF_NOTIFICATION_LANGUAGE, default=self.config_entry.options.get(CONF_NOTIFICATION_LANGUAGE, 'en')): vol.In({'en': 'English', 'pl': 'Polski'}),
             }),
         )

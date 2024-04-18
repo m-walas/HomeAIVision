@@ -88,7 +88,7 @@ async def setup_periodic_camera_check(hass, entry):
         hass (HomeAssistant): The HomeAssistant object.
         entry (ConfigEntry): The configuration entry for this integration.
     """
-    cam_frames_path = hass.config.path("www/camera_analysis/cam_frames/")
+    cam_frames_path = hass.config.path("www/HomeAIVision/cam_frames/")
     days_to_keep = entry.data.get("days_to_keep", 7)
     organize_by_day = entry.data.get("organize_by_day", True)
     max_images = entry.data.get("max_images", 30)

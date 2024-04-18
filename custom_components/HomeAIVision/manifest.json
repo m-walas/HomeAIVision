@@ -2,7 +2,7 @@
   "domain": "HomeAIVision",
   "name": "Home AI Vision",
   "config_flow": true,
-  "version": "1.0",
+  "version": "24.04.1",
   "documentation": "https://github.com/m-walas/HomeAIVision",
   "requirements": [
       "azure-cognitiveservices-vision-computervision==0.9.0",

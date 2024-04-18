@@ -2,33 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "HomeAIVision",
-        "description": "Enter the details for your camera analysis setup.",
+        "title": "HomeAIVision Setup",
+        "description": "Provide your camera setup details.",
         "data": {
-          "azure_api_key": "Azure API Key",
-          "azure_endpoint": "Azure Endpoint",
-          "cam_url": "Camera URL",
-          "max_images": "Maximum number of images",
-          "time_between_requests": "Time between requests (seconds)",
-          "organize_by_day": "Organize images in folders by day",
-          "days_to_keep": "Days to keep images",
-          "send_notifications": "Send notifications on person detection",
-          "notification_language": "Notification language"
+          "azure_api_key": "Azure API Key.",
+          "azure_endpoint": "Azure Endpoint URL.",
+          "cam_url": "URL to your camera feed.",
+          "time_between_requests": "Set the time interval (in seconds) between requests.",
+          "send_notifications": "Toggle sending notifications on detection.",
+          "organize_by_day": "Enable or disable organizing images by day."
+        }
+      },
+      "additional_options": {
+        "title": "Additional Settings",
+        "description": "Configure additional options for image storage and notifications.",
+        "data": {
+          "max_images": "Set the maximum number of images to store per day or in total.",
+          "days_to_keep": "Specify how many days to keep the images if organized by day.",
+          "notification_language": "Select the language for notifications."
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect with the provided details",
-      "invalid_auth": "Invalid authentication credentials",
-      "unknown": "An unknown error occurred",
-      "azure_credentials_invalid": "Azure credentials are invalid. Please check your API key and endpoint.",
-      "camera_url_invalid": "Camera URL is invalid. Please ensure it starts with http:// or https://"
-    },
-    "success": {
-      "setup": "HomeAIVision configuration completed successfully. Restarting Home Assistant is required for the integration to start working."
+      "azure_credentials_invalid": "Your Azure credentials are invalid. Please check your API key and endpoint URL.",
+      "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://."
     }
-  },
-  "message": {
-    "person_detected": "Person detected!"
   }
 }

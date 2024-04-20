@@ -3,6 +3,13 @@
     "step": {
       "user": {
         "title": "HomeAIVision Setup",
+        "description": "Enter title for the integration.",
+        "data": {
+          "integration_title": "Custom title"
+        }
+      },
+      "azure_conf": {
+        "title": "Azure Setup",
         "description": "Provide your camera setup details.",
         "data": {
           "azure_api_key": "Azure API Key.",
@@ -12,7 +19,13 @@
           "send_notifications": "Toggle sending notifications on detection.",
           "organize_by_day": "Enable or disable organizing images by day.",
           "confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "detected_objects": "Choose which objects to detect."
+          "detected_objects": {
+            "description": "Choose which objects to detect. Ensure at least one is selected.",
+            "person": "Person",
+            "car": "Car",
+            "cat": "Cat",
+            "dog": "Dog"
+          }
         }
       },
       "additional_options": {
@@ -27,7 +40,14 @@
     },
     "error": {
       "azure_credentials_invalid": "Your Azure credentials are invalid. Please check your API key and endpoint URL.",
-      "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://."
+      "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://.",
+      "at_least_one_object_must_be_selected": "At least one object from the list must be selected."
     }
+  },
+  "message": {
+    "person_detected": "Person detected!",
+    "car_detected": "Car detected!",
+    "cat_detected": "Cat detected!",
+    "dog_detected": "Dog detected!"
   }
 }

@@ -17,7 +17,13 @@ from .const import (
     CONF_NOTIFICATION_LANGUAGE,
     CONF_DETECTED_OBJECT,
     CONF_CONFIDENCE_THRESHOLD,
+    CONF_INTEGRATION_TITLE,
 )
+
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 
 async def verify_azure_credentials(azure_api_key, azure_endpoint):
@@ -29,7 +35,7 @@ async def verify_azure_credentials(azure_api_key, azure_endpoint):
     test_url = azure_endpoint.rstrip("/") + "/vision/v3.0/analyze"
     async with aiohttp.ClientSession() as session:
         async with session.post(test_url, headers=headers) as response:
-            return response.status == 200
+            return response.status != 401
 
 
 def verify_camera_url(cam_url):
@@ -47,21 +53,23 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     temp_config = {}
 
-    async def async_step_init(self, user_input=None):
+
+    async def async_step_user(self, user_input=None):
         """
         Initial step in the configuration flow, allowing the user to provide a custom title for the integration.
         """
         if user_input is None:
             return self.async_show_form(
-                step_id="init",
+                step_id="user",
                 data_schema=vol.Schema({
-                    vol.Optional('title', default=self.hass.localize('homeaivision.default_title')): str
+                    vol.Optional(CONF_INTEGRATION_TITLE, default="HomeAIVision"): str,
                 }),
             )
-        self.temp_config['title'] = user_input['title']
-        return await self.async_step_user()
+        self.temp_config['integration_title'] = user_input['integration_title']
+        return await self.async_step_azure_conf()
 
-    async def async_step_user(self, user_input=None):
+
+    async def async_step_azure_conf(self, user_input=None):
         """
         Handles the main configuration step where users enter their Azure API key, endpoint, camera URL, and other options.
         """
@@ -75,21 +83,25 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 self.temp_config.update(user_input)
                 return await self.async_step_additional_options()
+
         return self.async_show_form(
-            step_id="user",
+            step_id="azure_conf",
             data_schema=vol.Schema({
                 vol.Required(CONF_AZURE_API_KEY): str,
                 vol.Required(CONF_AZURE_ENDPOINT): str,
                 vol.Required(CONF_CAM_URL): str,
                 vol.Required(CONF_TIME_BETWEEN_REQUESTS, default=30): cv.positive_int,
-                vol.Required(CONF_DETECTED_OBJECT, default='person'): cv.multi_select({'person': self.hass.localize('objects.person'), 'car': self.hass.localize('objects.car'), 'cat': self.hass.localize('objects.cat'), 'dog': self.hass.localize('objects.dog')}),
-                vol.Required(CONF_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1), msg="Setting below 0.1 is not recommended"),
+                vol.Required(CONF_DETECTED_OBJECT, default='person'): vol.In({
+                    'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
+                }),
+                vol.Required(CONF_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
             }),
             errors=errors,
-            description_placeholders={"min_confidence": "Setting the confidence threshold below 0.1 is not recommended and may result in less accurate detections."}
+            description_placeholders={"min_confidence": "Setting the confidence threshold below 0.1 is not recommended."}
         )
+
 
     async def async_step_additional_options(self, user_input=None):
         """
@@ -97,14 +109,14 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if user_input is not None:
             self.temp_config.update(user_input)
-            return self.async_create_entry(title=self.temp_config['title'], data=self.temp_config)
+            return self.async_create_entry(title=self.temp_config['integration_title'], data=self.temp_config)
         fields = {
             vol.Required(CONF_MAX_IMAGES, default=30): cv.positive_int,
+            vol.Required(CONF_DAYS_TO_KEEP, default=7): cv.positive_int,
+            vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en'): vol.In({'en': 'English', 'pl': 'Polski'})
         }
-        if self.temp_config.get(CONF_ORGANIZE_BY_DAY, True):
-            fields[vol.Required(CONF_DAYS_TO_KEEP, default=7)]: cv.positive_int
         if self.temp_config.get(CONF_SEND_NOTIFICATIONS, False):
-            fields[vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en')]: vol.In({'en': 'English', 'pl': 'Polski'})
+            fields[vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en')] = vol.In({'en': 'English', 'pl': 'Polski'})
 
         return self.async_show_form(
             step_id="additional_options",

@@ -74,10 +74,10 @@ async def analyze_and_draw_object(image_data, azure_api_key, azure_endpoint, obj
 
                 for item in response_json.get('objects', []):
                     _LOGGER.debug(f"Object detected with confidence {item['confidence']}: {item['object']}")
-                    current_object = item['object']
-                    if current_object['object'] in objects and item['confidence'] >= confidence_threshold:
+                    object_name = item['object']
+                    if object_name in objects and item['confidence'] >= confidence_threshold:
                         object_detection = True
-                        detected_object_name = current_object
+                        detected_object_name = object_name
                         rect = item['rectangle']
                         draw.rectangle([(rect['x'], rect['y']), (rect['x'] + rect['w'], rect['y'] + rect['h'])], outline="red", width=5)
 

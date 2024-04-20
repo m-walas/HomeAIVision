@@ -3,6 +3,13 @@
     "step": {
       "user": {
         "title": "Konfiguracja HomeAIVision",
+        "description": "Wprowadź własną nazwę integracji.",
+        "data": {
+          "integration_title": "Nazwa"
+        }
+      },
+      "azure_conf": {
+        "title": "Konfiguracja Azure",
         "description": "Wprowadź szczegóły konfiguracji.",
         "data": {
           "azure_api_key": "Klucz API Azure.",
@@ -12,7 +19,13 @@
           "send_notifications": "Wysyłanie powiadomień przy wykryciu.",
           "organize_by_day": "Organizowanie obrazów według dni.",
           "confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
-          "detected_objects": "Wybierz obiekty do wykrywania."
+          "detected_objects": {
+            "description": "Wybierz obiekty do wykrywania. Upewnij się, że przynajmniej jeden jest wybrany.",
+            "person": "Osoba",
+            "car": "Samochód",
+            "cat": "Kot",
+            "dog": "Pies"
+          }
         }
       },
       "additional_options": {
@@ -27,7 +40,14 @@
     },
     "error": {
       "azure_credentials_invalid": "Twoje dane uwierzytelniające Azure są nieprawidłowe. Sprawdź swój klucz API i adres URL endpointu.",
-      "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://."
+      "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
+      "at_least_one_object_must_be_selected": "Przynajmniej jeden obiekt z listy musi być wybrany."
+    },
+    "notification": {
+      "person_detected": "Wykryto osobę",
+      "car_detected": "Wykryto samochód",
+      "cat_detected": "Wykryto kota",
+      "dog_detected": "Wykryto psa"
     }
   }
 }

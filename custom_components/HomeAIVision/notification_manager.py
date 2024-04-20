@@ -19,7 +19,6 @@ async def send_notification(hass, detected_object, image_path=None, organize_by_
         notification_language (str, optional): The language for the notification.
     """
     try:
-        # Determine the message key based on the detected object
         message_key = f"{detected_object}_detected"
 
         base_url = get_url(hass, prefer_external=False, allow_internal=True)
@@ -45,29 +44,29 @@ async def send_notification(hass, detected_object, image_path=None, organize_by_
 
 def load_translations(language):
     base_dir = os.path.dirname(__file__)
-    default_language = 'en'
     translations_path = os.path.join(base_dir, 'translations', f'{language}.json')
-    default_translations_path = os.path.join(base_dir, 'translations', f'{default_language}.json')
+    default_translations_path = os.path.join(base_dir, 'translations', 'en.json')
 
     if not os.path.exists(translations_path):
+        _LOGGER.warning(f"Translation file for {language} not found. Falling back to English.")
         translations_path = default_translations_path
 
     try:
         with open(translations_path, 'r', encoding='utf-8') as file:
-            return json.load(file)
+            translations = json.load(file)
+            _LOGGER.debug(f"Translations loaded for {language}: {translations}")
+            return translations
     except Exception as e:
         _LOGGER.error(f"Error loading translation file: {e}")
-        with open(default_translations_path, 'r', encoding='utf-8') as file:
-            return json.load(file)
+        return {}
 
 
 def get_translated_message(language, message_key):
     translations = load_translations(language)
     message = translations.get("message", {}).get(message_key)
-    
+
     if message is None:
-        default_translations = load_translations('en')
-        message = default_translations.get("message", {}).get(message_key, "Default message")
+        _LOGGER.warning(f"No translation found for {message_key} in {language}, using default message")
+        message = "Default message"
 
     return message
-

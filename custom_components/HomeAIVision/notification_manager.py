@@ -54,7 +54,7 @@ def load_translations(language):
     try:
         with open(translations_path, 'r', encoding='utf-8') as file:
             translations = json.load(file)
-            _LOGGER.debug(f"Translations loaded for {language}: {translations}")
+            # _LOGGER.debug(f"Translations loaded for {language}: {translations}")
             return translations
     except Exception as e:
         _LOGGER.error(f"Error loading translation file: {e}")
@@ -70,3 +70,4 @@ def get_translated_message(language, message_key):
         message = "Default message"
 
     return message
+

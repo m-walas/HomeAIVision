@@ -74,19 +74,30 @@ async def analyze_and_draw_object(image_data, azure_api_key, azure_endpoint, obj
 
                 for item in response_json.get('objects', []):
                     _LOGGER.debug(f"Object detected with confidence {item['confidence']}: {item['object']}")
-                    object_name = item['object']
-                    if object_name in objects and item['confidence'] >= confidence_threshold:
+                    object_name, confidence = extract_object_with_hierarchy(item, objects)
+                    if object_name and confidence >= confidence_threshold:
                         object_detection = True
                         detected_object_name = object_name
                         rect = item['rectangle']
                         draw.rectangle([(rect['x'], rect['y']), (rect['x'] + rect['w'], rect['y'] + rect['h'])], outline="red", width=5)
-
+                
                 buffered = io.BytesIO()
                 image.save(buffered, format="JPEG")
                 return object_detection, buffered.getvalue(), detected_object_name
         except Exception as e:
             _LOGGER.error(f"Error during analysis: {e}")
             return False, None, None
+
+
+def extract_object_with_hierarchy(item, target_objects):
+    """
+    Traverse the object and its parents to find a matching target object.
+    """
+    while item:
+        if item['object'] in target_objects:
+            return item['object'], item['confidence']
+        item = item.get('parent')
+    return None, None
 
 
 async def setup_periodic_camera_check(hass, entry):

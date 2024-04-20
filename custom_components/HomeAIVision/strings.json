@@ -10,7 +10,9 @@
           "cam_url": "URL to your camera feed.",
           "time_between_requests": "Set the time interval (in seconds) between requests.",
           "send_notifications": "Toggle sending notifications on detection.",
-          "organize_by_day": "Enable or disable organizing images by day."
+          "organize_by_day": "Enable or disable organizing images by day.",
+          "confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "detected_objects": "Choose which objects to detect."
         }
       },
       "additional_options": {

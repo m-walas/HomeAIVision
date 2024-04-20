@@ -7,22 +7,23 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
 
-async def send_notification(hass, message_key, image_path=None, organize_by_day=True, notification_language='en'):
+async def send_notification(hass, detected_object, image_path=None, organize_by_day=True, notification_language='en'):
     """
     Send a notification message via Home Assistant with an optional image attachment.
 
     Args:
         hass: The Home Assistant instance.
-        message_key (str): The key for the message to be translated.
+        detected_object (str): The object that was detected.
         image_path (str, optional): The path to the image within the `www` directory.
         organize_by_day (bool, optional): Indicates if images are organized by day.
         notification_language (str, optional): The language for the notification.
     """
     try:
-        # Choose external or internal url to get base ha url
+        # Determine the message key based on the detected object
+        message_key = f"{detected_object}_detected"
+
         base_url = get_url(hass, prefer_external=False, allow_internal=True)
         _LOGGER.debug(f"Base URL for notification: {base_url}")
-
         message = get_translated_message(notification_language, message_key)
 
         data = {"message": message}

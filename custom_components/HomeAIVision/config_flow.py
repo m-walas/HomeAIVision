@@ -15,96 +15,98 @@ from .const import (
     CONF_DAYS_TO_KEEP,
     CONF_SEND_NOTIFICATIONS,
     CONF_NOTIFICATION_LANGUAGE,
+    CONF_DETECTED_OBJECT,
+    CONF_CONFIDENCE_THRESHOLD,
 )
 
 
-# Helper function to verify Azure API key and endpoint by making a test request.
-# It returns True if credentials are valid, otherwise False.
 async def verify_azure_credentials(azure_api_key, azure_endpoint):
+    """
+    Verifies the Azure API credentials by making a test request to the Azure Vision API.
+    Returns True if the API credentials are valid, otherwise False.
+    """
     headers = {'Ocp-Apim-Subscription-Key': azure_api_key}
     test_url = azure_endpoint.rstrip("/") + "/vision/v3.0/analyze"
     async with aiohttp.ClientSession() as session:
         async with session.post(test_url, headers=headers) as response:
-            return response.status != 401
+            return response.status == 200
 
 
-# Helper function to check if the camera URL is properly formatted.
-# It performs a simple check to see if the URL starts with http:// or https://
 def verify_camera_url(cam_url):
+    """
+    Checks if the camera URL is properly formatted, starting with http:// or https://.
+    Returns True if the URL is valid, otherwise False.
+    """
     return cam_url.startswith("http://") or cam_url.startswith("https://")
 
 
 class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """
+    Manages the configuration flow for the HomeAIVision integration.
+    """
     VERSION = 1
     temp_config = {}
 
+    async def async_step_init(self, user_input=None):
+        """
+        Initial step in the configuration flow, allowing the user to provide a custom title for the integration.
+        """
+        if user_input is None:
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema({
+                    vol.Optional('title', default=self.hass.localize('homeaivision.default_title')): str
+                }),
+            )
+        self.temp_config['title'] = user_input['title']
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
+        """
+        Handles the main configuration step where users enter their Azure API key, endpoint, camera URL, and other options.
+        """
         errors = {}
-        
         if user_input is not None:
             azure_valid = await verify_azure_credentials(user_input[CONF_AZURE_API_KEY], user_input[CONF_AZURE_ENDPOINT])
             if not azure_valid:
                 errors["base"] = "azure_credentials_invalid"
-                
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
-
             if not errors:
-                self.temp_config = user_input
+                self.temp_config.update(user_input)
                 return await self.async_step_additional_options()
-        
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required(CONF_AZURE_API_KEY): str,
                 vol.Required(CONF_AZURE_ENDPOINT): str,
                 vol.Required(CONF_CAM_URL): str,
-#
                 vol.Required(CONF_TIME_BETWEEN_REQUESTS, default=30): cv.positive_int,
+                vol.Required(CONF_DETECTED_OBJECT, default='person'): cv.multi_select({'person': self.hass.localize('objects.person'), 'car': self.hass.localize('objects.car'), 'cat': self.hass.localize('objects.cat'), 'dog': self.hass.localize('objects.dog')}),
+                vol.Required(CONF_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1), msg="Setting below 0.1 is not recommended"),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
             }),
             errors=errors,
+            description_placeholders={"min_confidence": "Setting the confidence threshold below 0.1 is not recommended and may result in less accurate detections."}
         )
 
-
     async def async_step_additional_options(self, user_input=None):
-        errors = {}
+        """
+        Handles additional configuration options like maximum images, days to keep images, and notification language.
+        """
         if user_input is not None:
             self.temp_config.update(user_input)
-            return self.async_create_entry(title="HomeAIVision", data=self.temp_config)
-
+            return self.async_create_entry(title=self.temp_config['title'], data=self.temp_config)
         fields = {
             vol.Required(CONF_MAX_IMAGES, default=30): cv.positive_int,
         }
         if self.temp_config.get(CONF_ORGANIZE_BY_DAY, True):
-            fields[vol.Required(CONF_DAYS_TO_KEEP, default=7)] = cv.positive_int
+            fields[vol.Required(CONF_DAYS_TO_KEEP, default=7)]: cv.positive_int
         if self.temp_config.get(CONF_SEND_NOTIFICATIONS, False):
-            fields[vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en')] = vol.In({'en': 'English', 'pl': 'Polski'})
+            fields[vol.Required(CONF_NOTIFICATION_LANGUAGE, default='en')]: vol.In({'en': 'English', 'pl': 'Polski'})
 
         return self.async_show_form(
             step_id="additional_options",
             data_schema=vol.Schema(fields),
-            errors={},
-        )
-
-
-class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({
-                vol.Required(CONF_MAX_IMAGES, default=self.config_entry.options.get(CONF_MAX_IMAGES, 30)): cv.positive_int,
-                vol.Required(CONF_TIME_BETWEEN_REQUESTS, default=self.config_entry.options.get(CONF_TIME_BETWEEN_REQUESTS, 30)): cv.positive_int,
-                vol.Optional(CONF_ORGANIZE_BY_DAY, default=self.config_entry.options.get(CONF_ORGANIZE_BY_DAY, True)): bool,
-                vol.Optional(CONF_DAYS_TO_KEEP, default=self.config_entry.options.get(CONF_DAYS_TO_KEEP, 7)): cv.positive_int,
-                vol.Optional(CONF_SEND_NOTIFICATIONS, default=self.config_entry.options.get(CONF_SEND_NOTIFICATIONS, False)): bool,
-                vol.Optional(CONF_NOTIFICATION_LANGUAGE, default=self.config_entry.options.get(CONF_NOTIFICATION_LANGUAGE, 'en')): vol.In({'en': 'English', 'pl': 'Polski'}),
-            }),
         )

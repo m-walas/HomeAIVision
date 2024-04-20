@@ -10,7 +10,9 @@
           "cam_url": "Adres URL do strumienia kamery.",
           "time_between_requests": "Ustaw interwał czasowy (w sekundach) między żądaniami.",
           "send_notifications": "Wysyłanie powiadomień przy wykryciu.",
-          "organize_by_day": "Organizowanie obrazów według dni."
+          "organize_by_day": "Organizowanie obrazów według dni.",
+          "confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
+          "detected_objects": "Wybierz obiekty do wykrywania."
         }
       },
       "additional_options": {

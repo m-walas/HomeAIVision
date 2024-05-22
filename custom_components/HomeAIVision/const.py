@@ -1,5 +1,7 @@
-# Domain of the integration, used as a namespace for configuration, data, etc.
+# Domain of the integration, used as a namespace for configuration keys.
 DOMAIN = "HomeAIVision"
+
+FRONTEND_SCRIPT_URL = "/homeaivision_panel.js"
 
 # Constants for storing configuration keys
 CONF_AZURE_API_KEY = "azure_api_key"

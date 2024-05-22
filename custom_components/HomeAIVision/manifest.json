@@ -2,13 +2,20 @@
   "domain": "HomeAIVision",
   "name": "Home AI Vision",
   "config_flow": true,
-  "version": "24.04.5",
+  "version": "24.05.1",
   "documentation": "https://github.com/m-walas/HomeAIVision",
   "requirements": [
       "azure-cognitiveservices-vision-computervision==0.9.0",
       "Pillow>=8.0.0",
       "aiofiles==0.8.0"
   ],
-  "dependencies": [],
-  "codeowners": ["@m-walas"]
+  "dependencies": [
+    "panel_custom",
+    "http",
+    "frontend",
+    "websocket_api",
+    "lovelace"
+  ],
+  "codeowners": ["@m-walas"],
+  "iot_class": "cloud_polling"
 }

@@ -34,3 +34,6 @@ secrets.yaml
 
 # Ignore the local configuration file
 config_entries.json
+
+# Ignore js.map
+*.js.map

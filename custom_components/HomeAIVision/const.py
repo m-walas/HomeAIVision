@@ -1,5 +1,5 @@
 # Domain of the integration, used as a namespace for configuration keys.
-DOMAIN = "HomeAIVision"
+DOMAIN = "homeaivision"
 
 FRONTEND_SCRIPT_URL = "/homeaivision_panel.js"
 

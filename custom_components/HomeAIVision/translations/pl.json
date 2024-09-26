@@ -42,12 +42,12 @@
       "azure_credentials_invalid": "Twoje dane uwierzytelniające Azure są nieprawidłowe. Sprawdź swój klucz API i adres URL endpointu.",
       "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
       "at_least_one_object_must_be_selected": "Przynajmniej jeden obiekt z listy musi być wybrany."
-    },
-    "message": {
-      "person_detected": "Wykryto osobę!",
-      "car_detected": "Wykryto samochód!",
-      "cat_detected": "Wykryto kota!",
-      "dog_detected": "Wykryto psa!"
     }
+  },
+  "message": {
+    "person_detected": "Wykryto osobę!",
+    "car_detected": "Wykryto samochód!",
+    "cat_detected": "Wykryto kota!",
+    "dog_detected": "Wykryto psa!"
   }
 }

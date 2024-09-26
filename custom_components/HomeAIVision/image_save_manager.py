@@ -1,9 +1,9 @@
 import os
 from datetime import datetime, timedelta
 import shutil
+import asyncio
 import aiofiles
 from .const import CONF_MAX_IMAGES
-from PIL import Image
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,19 +38,39 @@ async def save_image(base_path, image_data, organize_by_day, max_images):
     else:
         save_path = base_path
 
-    current_images = sorted(os.listdir(save_path), key=lambda x: os.path.getmtime(os.path.join(save_path, x)))
+    try:
+        current_images = await asyncio.to_thread(
+            lambda: sorted(
+                [f for f in os.listdir(save_path) if f.lower().endswith((".jpg", ".jpeg"))],
+                key=lambda x: os.path.getmtime(os.path.join(save_path, x))
+            )
+        )
+    except FileNotFoundError:
+        _LOGGER.warning(f"[HomeAIVision] Save path does not exist: {save_path}")
+        current_images = []
+
     if len(current_images) >= max_images:
-        for extra_image in current_images[:len(current_images) - max_images + 1]:
-            os.remove(os.path.join(save_path, extra_image))
+        images_to_remove = current_images[:len(current_images) - max_images + 1]
+        await asyncio.gather(*[
+            asyncio.to_thread(os.remove, os.path.join(save_path, extra_image))
+            for extra_image in images_to_remove
+        ])
+        for extra_image in images_to_remove:
+            _LOGGER.info(f"[HomeAIVision] Removed old image: {extra_image}")
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
     image_path = os.path.join(save_path, f"cam_frame_{timestamp}.jpg")
-    async with aiofiles.open(image_path, 'wb') as file:
-        await file.write(image_data)
+
+    try:
+        async with aiofiles.open(image_path, 'wb') as file:
+            await file.write(image_data)
+        _LOGGER.info(f"[HomeAIVision] Saved image: {image_path}")
+    except Exception as e:
+        _LOGGER.error(f"[HomeAIVision] Failed to save image {image_path}: {e}")
+
     return image_path
 
-def clean_up_old_images(base_path, days_to_keep):
+async def clean_up_old_images(base_path, days_to_keep):
     """
     Removes image folders older than a specified number of days.
     
@@ -59,19 +79,22 @@ def clean_up_old_images(base_path, days_to_keep):
         days_to_keep (int): Number of days to keep images before deletion.
     """
     if not os.path.exists(base_path):
-        os.makedirs(base_path, exist_ok=True)
-        _LOGGER.info(f"Created directory: {base_path}")
+        await asyncio.to_thread(os.makedirs, base_path, exist_ok=True)
+        _LOGGER.info(f"[HomeAIVision] Created directory: {base_path}")
         return
 
     today = datetime.now()
-    for folder_name in os.listdir(base_path):
+    folder_names = await asyncio.to_thread(os.listdir, base_path)
+    for folder_name in folder_names:
         folder_path = os.path.join(base_path, folder_name)
         if os.path.isdir(folder_path):
             try:
                 folder_date = datetime.strptime(folder_name, "%Y-%m-%d")
                 if (today - folder_date).days > days_to_keep:
-                    shutil.rmtree(folder_path)
-                    print(f"Deleted old image folder: {folder_path}")
+                    await asyncio.to_thread(shutil.rmtree, folder_path)
+                    _LOGGER.info(f"[HomeAIVision] Deleted old image folder: {folder_path}")
             except ValueError:
                 #! Ignore directories that do not match the expected date format
                 continue
+            except Exception as e:
+                _LOGGER.error(f"[HomeAIVision] Failed to delete {folder_path}: {e}")

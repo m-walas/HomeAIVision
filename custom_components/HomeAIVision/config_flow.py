@@ -109,7 +109,7 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if user_input is not None:
             self.temp_config.update(user_input)
-            return self.async_create_entry(title=self.temp_config['integration_title'], data=self.temp_config)
+            return self.async_create_entry(title=self.temp_config['integration_title'], data={**self.temp_config, "azure_request_count": 0})
         fields = {
             vol.Required(CONF_MAX_IMAGES, default=30): cv.positive_int,
             vol.Required(CONF_DAYS_TO_KEEP, default=7): cv.positive_int,

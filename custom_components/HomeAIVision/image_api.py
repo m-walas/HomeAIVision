@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.http import HomeAssistantView
 from urllib.parse import unquote
 from .const import DOMAIN
+from aiohttp.web import json_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,3 +86,47 @@ class ImageListView(HomeAssistantView):
             except Exception as e:
                 _LOGGER.error(f"Error retrieving unorganized images: {e}")
                 return self.json({"success": False, "error": "error_retrieving_images"}, status=500)
+
+class ConfigDataView(HomeAssistantView):
+    """View to get HomeAIVision configuration data."""
+
+    url = "/api/homeaivision/config"
+    name = "api:homeaivision:config"
+    requires_auth = True
+
+    async def get(self, request):
+        """Handle GET requests to retrieve configuration data."""
+        hass = request.app["hass"]
+        user = request["hass_user"]
+
+        _LOGGER.info("Received request for configuration data")
+        
+        entry_id = None
+        for eid, data in hass.data.get(DOMAIN, {}).items():
+            entry_id = eid
+            break
+
+        if not entry_id:
+            _LOGGER.error("No valid entry ID found")
+            return json_response({"success": False, "error": "invalid_entry_id"}, status=400)
+
+        config = hass.data[DOMAIN][entry_id]
+
+        config_data = {
+            "organize_by_day": config.get("organize_by_day", False),
+            "days_to_keep": config.get("days_to_keep", 7),
+            "max_images": config.get("max_images", 30),
+            "time_between_requests": config.get("time_between_requests", 30),
+            "send_notifications": config.get("send_notifications", False),
+            "notification_language": config.get("notification_language", "en"),
+            "detected_object": config.get("detected_object", "person"),
+            "confidence_threshold": config.get("confidence_threshold", 0.6),
+            "integration_title": config.get("integration_title", "Home AI Vision"),
+        }
+
+        _LOGGER.info(f"Returning configuration data: {config_data}")
+        
+        return json_response({
+            "success": True,
+            "config": config_data
+        }, status=200)

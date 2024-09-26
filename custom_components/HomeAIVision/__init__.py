@@ -20,7 +20,7 @@ from .const import (
 )
 from .camera import setup_periodic_camera_check
 from .mod_view import async_setup_view
-from .image_api import ImageListView
+from .image_api import ImageListView, ConfigDataView
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     hass.http.register_view(ImageListView)
+    hass.http.register_view(ConfigDataView)
 
     await async_setup_view(hass)
 

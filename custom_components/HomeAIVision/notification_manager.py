@@ -58,7 +58,6 @@ async def load_translations(language):
         _LOGGER.error(f"[HomeAIVision] Error loading translation file: {e}")
         return {}
 
-
 async def get_translated_message(language, message_key):
     translations = await load_translations(language)
     message = translations.get("message", {}).get(message_key)

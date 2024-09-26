@@ -7,7 +7,6 @@ from homeassistant.helpers.network import get_url
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-
 async def send_notification(hass, detected_object, image_path=None, organize_by_day=True, notification_language='en'):
     """
     Send a notification message via Home Assistant with an optional image attachment.
@@ -53,9 +52,8 @@ async def load_translations(language):
 
     try:
         async with aiofiles.open(translations_path, 'r', encoding='utf-8') as file:
-            translations = json.load(file)
-            # _LOGGER.debug(f"Translations loaded for {language}: {translations}")
-            return translations
+            content = await file.read()
+            return json.loads(content)
     except Exception as e:
         _LOGGER.error(f"[HomeAIVision] Error loading translation file: {e}")
         return {}

@@ -96,9 +96,9 @@ function t(t,e,s,i){var n,r=arguments.length,o=r<3?e:null===i?i=Object.getOwnPro
 
       async loadImages() {
         try {
-          const response = await this.hass.fetch('/api/homeaivision/images');
+          const response = await this.hass.fetch("/api/homeaivision/images");
           const data = await response.json();
-      
+
           if (data.success) {
             this.images = data.images;
             this.currentDay = data.currentDay;
@@ -108,7 +108,7 @@ function t(t,e,s,i){var n,r=arguments.length,o=r<3?e:null===i?i=Object.getOwnPro
             console.warn("[HomeAIVision] No images found");
           }
         } catch (error) {
-          console.error(`[HomeAIVision] Error loading images: ${error}`);
+          console.error("[HomeAIVision] Error loading images: ${error}");
         }
       }
 

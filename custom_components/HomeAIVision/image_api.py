@@ -21,17 +21,15 @@ class ImageListView(HomeAssistantView):
 
     url = "/api/homeaivision/images"
     name = "api:homeaivision:images"
-    requires_auth = True  # Upewnij się, że wymaga autoryzacji
+    requires_auth = True
 
     async def get(self, request):
         """Handle GET requests to retrieve images."""
         hass = request.app["hass"]
         user = request["hass_user"]
 
-        # Znajdź odpowiedni entry_id na podstawie użytkownika
         entry_id = None
         for eid, data in hass.data.get(DOMAIN, {}).items():
-            # Zakładamy, że konfiguracja jest jednokrotna
             entry_id = eid
             break
 
@@ -46,7 +44,6 @@ class ImageListView(HomeAssistantView):
         current_day = None
 
         if organize_by_day:
-            # Przeglądaj katalogi wg dni
             try:
                 day_dirs = sorted(await get_listdir(cam_frames_dir), reverse=True)
                 for day_dir in day_dirs:
@@ -73,7 +70,6 @@ class ImageListView(HomeAssistantView):
                 _LOGGER.error(f"Error retrieving organized images: {e}")
                 return self.json({"success": False, "error": "error_retrieving_images"}, status=500)
         else:
-            # Przeglądaj wszystkie obrazy bez podziału na dni
             try:
                 img_files = sorted(await get_listdir(cam_frames_dir), reverse=True)
                 for img in img_files:

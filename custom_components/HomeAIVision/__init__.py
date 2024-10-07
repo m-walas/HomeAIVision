@@ -1,63 +1,60 @@
-import os
+import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 
-from .const import (
-    DOMAIN,
-    CONF_AZURE_API_KEY,
-    CONF_AZURE_ENDPOINT,
-    CONF_CAM_URL,
-    CONF_MAX_IMAGES,
-    CONF_TIME_BETWEEN_REQUESTS,
-    CONF_ORGANIZE_BY_DAY,
-    CONF_DAYS_TO_KEEP,
-    CONF_SEND_NOTIFICATIONS,
-    CONF_NOTIFICATION_LANGUAGE,
-    CONF_DETECTED_OBJECT,
-    CONF_CONFIDENCE_THRESHOLD,
-    CONF_INTEGRATION_TITLE,
-)
+from .const import DOMAIN, CONF_AZURE_API_KEY, CONF_AZURE_ENDPOINT
+from .device_manager import setup_device
 from .camera import setup_periodic_camera_check
-from .mod_view import async_setup_view
-from .image_api import ImageListView, ConfigDataView
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up HomeAIVision integration from a config entry."""
+    _LOGGER.debug(f"[HomeAIVision] async_setup_entry called with entry: {entry.data}")
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
+    # Store integration configuration
     hass.data[DOMAIN][entry.entry_id] = {
-        "organize_by_day": entry.data.get(CONF_ORGANIZE_BY_DAY, False),
-        "days_to_keep": entry.data.get(CONF_DAYS_TO_KEEP, 7),
-        "max_images": entry.data.get(CONF_MAX_IMAGES, 30),
-        "time_between_requests": entry.data.get(CONF_TIME_BETWEEN_REQUESTS, 30),
-        "send_notifications": entry.data.get(CONF_SEND_NOTIFICATIONS, False),
-        "notification_language": entry.data.get(CONF_NOTIFICATION_LANGUAGE, "en"),
-        "detected_object": entry.data.get(CONF_DETECTED_OBJECT, "person"),
-        "confidence_threshold": entry.data.get(CONF_CONFIDENCE_THRESHOLD, 0.6),
-        "integration_title": entry.data.get(CONF_INTEGRATION_TITLE, "Home AI Vision"),
         "azure_api_key": entry.data.get(CONF_AZURE_API_KEY),
         "azure_endpoint": entry.data.get(CONF_AZURE_ENDPOINT),
-        "cam_url": entry.data.get(CONF_CAM_URL),
-        "azure_request_count": entry.data.get("azure_request_count", 0),
     }
 
-    hass.http.register_view(ImageListView)
-    hass.http.register_view(ConfigDataView)
+    # Set up devices
+    await async_setup_devices(hass, entry)
 
-    await async_setup_view(hass)
+    # Load sensor platform
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
 
-    async def start_camera_analysis(event):
-        await setup_periodic_camera_check(hass, entry)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_camera_analysis)
+    # Start periodic camera checks for each device
+    devices = entry.data.get("devices", {})
+    for device_config in devices.values():
+        hass.async_create_task(
+            setup_periodic_camera_check(hass, entry, device_config)
+        )
 
     return True
 
+
+async def async_setup_devices(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up devices (cameras) defined under the entry."""
+    devices = entry.data.get("devices", {})
+    for device_config in devices.values():
+        await setup_device(hass, entry, device_config)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "binary_sensor"])
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, ["sensor"]
+    )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Reload the config entry."""
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)

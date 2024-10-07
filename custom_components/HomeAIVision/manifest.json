@@ -1,7 +1,6 @@
 {
   "domain": "homeaivision",
   "name": "Home AI Vision",
-  "config_flow": true,
   "version": "24.9.2",
   "documentation": "https://github.com/m-walas/HomeAIVision",
   "requirements": [
@@ -17,5 +16,6 @@
     "lovelace"
   ],
   "codeowners": ["@m-walas"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "config_flow": true
 }

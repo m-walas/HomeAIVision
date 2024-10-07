@@ -1,87 +1,103 @@
 import aiohttp
 import asyncio
-from PIL import Image, ImageDraw
-import os
-from datetime import datetime
-import io
 import logging
+import io
+from PIL import Image, ImageDraw
+from datetime import datetime
+from aiohttp import ClientConnectorError
+
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.components.persistent_notification import (
+    create as pn_create,
+)
 
 from .notification_manager import send_notification
+from .save_image_manager import save_image, clean_up_old_images
 from .const import (
     DOMAIN,
     CONF_AZURE_API_KEY,
     CONF_AZURE_ENDPOINT,
-    CONF_CAM_URL,
-    CONF_TIME_BETWEEN_REQUESTS,
-    CONF_ORGANIZE_BY_DAY,
-    CONF_SEND_NOTIFICATIONS,
-    CONF_NOTIFICATION_LANGUAGE,
-    CONF_CONFIDENCE_THRESHOLD,
     CONF_DETECTED_OBJECT,
 )
-from .image_save_manager import save_image, clean_up_old_images
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
-async def analyze_and_draw_object(image_data, azure_api_key, azure_endpoint, objects, confidence_threshold):
+async def analyze_and_draw_object(
+    image_data, azure_api_key, azure_endpoint, objects, confidence_threshold
+):
     """
-    Analyzes the image for the presence of a person using Azure Cognitive Services.
-    
-    Args:
-        image_data (bytes): The image data to analyze.
-        azure_api_key (str): The API key for Azure Cognitive Services.
-        azure_endpoint (str): The endpoint URL for Azure Cognitive Services.
-        objects (list): A list of objects to detect in the image.
-        confidence_threshold (float): The minimum confidence level required for detection.
-    
-    Returns:
-        tuple: A tuple containing a boolean indicating if a person was detected,
-        the modified image data with drawn rectangles around detected objects,
-        and the name of the detected object.
+    Analyzes the image for the presence of specified objects using Azure
+    Cognitive Services.
     """
     headers = {
         'Ocp-Apim-Subscription-Key': azure_api_key,
-        'Content-Type': 'application/octet-stream'
+        'Content-Type': 'application/octet-stream',
     }
-    params = {
-        'visualFeatures': 'Objects'
-    }
-    
+    params = {'visualFeatures': 'Objects'}
+
     object_detected = False
     detected_object_name = None
 
-    _LOGGER.debug(f"[HomeAIVision] Azure API URL: {azure_endpoint}, Azure API Key: {azure_api_key[:5]}***")
-    async with aiohttp.ClientSession() as session:
-        try:
+    _LOGGER.debug(
+        f"[HomeAIVision] Azure API URL: {azure_endpoint}, "
+        f"Azure API Key: {azure_api_key[:5]}***"
+    )
+
+    try:
+        async with aiohttp.ClientSession() as session:
             _LOGGER.debug("[HomeAIVision] Starting analyze")
-            async with session.post(f"{azure_endpoint}/vision/v3.0/analyze", headers=headers, params=params, data=image_data) as response:
+            async with session.post(
+                f"{azure_endpoint}/vision/v3.0/analyze",
+                headers=headers,
+                params=params,
+                data=image_data,
+            ) as response:
                 if response.status != 200:
-                    _LOGGER.error(f"[HomeAIVision] Failed to analyze image, status code: {response.status}")
+                    _LOGGER.error(
+                        f"[HomeAIVision] Failed to analyze image, "
+                        f"status code: {response.status}"
+                    )
                     response_text = await response.text()
-                    _LOGGER.error(f"[HomeAIVision] Error response: {response_text}")
+                    _LOGGER.error(
+                        f"[HomeAIVision] Error response: {response_text}"
+                    )
                     return False, None, None
-                
+
                 response_json = await response.json()
-                _LOGGER.debug(f"[HomeAIVision] Azure response: {response_json}")
+                _LOGGER.debug(
+                    f"[HomeAIVision] Azure response: {response_json}"
+                )
                 image = Image.open(io.BytesIO(image_data))
                 draw = ImageDraw.Draw(image)
 
                 for item in response_json.get('objects', []):
-                    _LOGGER.debug(f"[HomeAIVision] Object detected with confidence {item['confidence']}: {item['object']}")
-                    object_name, confidence = extract_object_with_hierarchy(item, objects)
+                    _LOGGER.debug(
+                        f"[HomeAIVision] Object detected with confidence "
+                        f"{item['confidence']}: {item['object']}"
+                    )
+                    object_name, confidence = extract_object_with_hierarchy(
+                        item, objects
+                    )
                     if object_name and confidence >= confidence_threshold:
                         object_detected = True
                         detected_object_name = object_name
                         rect = item['rectangle']
-                        draw.rectangle([(rect['x'], rect['y']), (rect['x'] + rect['w'], rect['y'] + rect['h'])], outline="red", width=5)
-                
+                        draw.rectangle(
+                            [
+                                (rect['x'], rect['y']),
+                                (rect['x'] + rect['w'], rect['y'] + rect['h']),
+                            ],
+                            outline="red",
+                            width=5,
+                        )
+
                 buffered = io.BytesIO()
                 image.save(buffered, format="JPEG")
                 return object_detected, buffered.getvalue(), detected_object_name
-        except Exception as e:
-            _LOGGER.error(f"Error during analysis: {e}")
-            return False, None, None
+    except Exception as e:
+        _LOGGER.error(f"[HomeAIVision] Error during analysis: {e}")
+        return False, None, None
+
 
 def extract_object_with_hierarchy(item, target_objects):
     """
@@ -93,80 +109,121 @@ def extract_object_with_hierarchy(item, target_objects):
         item = item.get('parent')
     return None, None
 
-async def update_azure_request_count(hass, entry_id):
-    """
-    Increments the Azure request counter and updates the config entry data.
-    """
-    hass.data[DOMAIN][entry_id]["azure_request_count"] += 1
-    _LOGGER.debug(f"[HomeAIVision] Azure request count: {hass.data[DOMAIN][entry_id]['azure_request_count']}")
 
-    # Aktualizacja config entry data
-    config_entry = hass.config_entries.async_get_entry(entry_id)
-    if config_entry:
-        updated_data = config_entry.data.copy()
-        updated_data["azure_request_count"] = hass.data[DOMAIN][entry_id]["azure_request_count"]
-        hass.config_entries.async_update_entry(config_entry, data=updated_data)
-        _LOGGER.debug(f"[HomeAIVision] Updated config entry data with new azure_request_count: {updated_data['azure_request_count']}")
-
-
-async def setup_periodic_camera_check(hass, entry):
+async def setup_periodic_camera_check(hass, entry, device_config):
     """
-    Sets up periodic checking of the camera feed, analyzing for persons,
-    and saving images where persons are detected.
-    
-    Args:
-        hass (HomeAssistant): The HomeAssistant object.
-        entry (ConfigEntry): The configuration entry for this integration.
+    Sets up periodic checking of the camera feed, analyzing for objects,
+    and saving images where objects are detected.
     """
-    config = hass.data[DOMAIN][entry.entry_id]
+    device_id = device_config['id']
     cam_frames_path = hass.config.path("www/HomeAIVision/cam_frames/")
-    days_to_keep = config.get("days_to_keep", 7)
-    organize_by_day = config.get("organize_by_day", True)
-    max_images = config.get("max_images", 30)
-    detected_objects = [config.get(CONF_DETECTED_OBJECT)]
-    confidence_threshold = config.get("confidence_threshold", 0.6)
-    time_between_requests = config.get("time_between_requests", 30)
+    days_to_keep = device_config.get("days_to_keep", 7)
+    organize_by_day = device_config.get("organize_by_day", True)
+    max_images = device_config.get("max_images", 30)
+    detected_objects = [device_config.get(CONF_DETECTED_OBJECT)]
+    confidence_threshold = device_config.get("confidence_threshold", 0.6)
+    time_between_requests = device_config.get("time_between_requests", 30)
+    send_notifications = device_config.get("send_notifications", False)
+    cam_url = device_config.get("url", "")
+
+    if not cam_url:
+        _LOGGER.error(
+            f"[HomeAIVision] Camera URL is missing for device "
+            f"{device_config['name']}"
+        )
+        return
 
     await clean_up_old_images(cam_frames_path, days_to_keep)
 
-    async with aiohttp.ClientSession() as session:
-        while True:
-            try:
-                cam_url = config.get(CONF_CAM_URL, "")
-                if "pwd=" in cam_url:
-                    # Mask the password in logs
-                    pwd_index = cam_url.find("pwd=") + len("pwd=")
-                    cam_url_log = f"{cam_url[:pwd_index]}***"
-                else:
-                    cam_url_log = cam_url
-                _LOGGER.debug(f"[HomeAIVision] Camera URL: {cam_url_log}")
-
-                async with session.get(cam_url) as response:
-                    if response.status == 200:
-                        _LOGGER.info("[HomeAIVision] Image successfully downloaded")
-                        image_data = await response.read()
-                        object_detected, modified_image_data, detected_object_name = await analyze_and_draw_object(
-                            image_data, 
-                            config.get(CONF_AZURE_API_KEY),
-                            config.get(CONF_AZURE_ENDPOINT),
-                            detected_objects,
-                            confidence_threshold
-                        )
-                        if object_detected and modified_image_data:
-                            save_path = await save_image(cam_frames_path, modified_image_data, organize_by_day, max_images)
-                            _LOGGER.info(f"[HomeAIVision] Saving image: {save_path}")
-
-                            # Increment the Azure request counter
-                            await update_azure_request_count(hass, entry.entry_id)
-                            
-                            # Send notification if enabled
-                            if config.get("send_notifications", False):
-                                language = config.get("notification_language", "en")
-                                relative_path = save_path.replace(hass.config.path(), "").lstrip("/")
-                                await send_notification(hass, detected_object_name, relative_path, organize_by_day, language)
+    async def periodic_check():
+        async with aiohttp.ClientSession() as session:
+            while True:
+                try:
+                    if "pwd=" in cam_url:
+                        pwd_index = cam_url.find("pwd=") + len("pwd=")
+                        cam_url_log = f"{cam_url[:pwd_index]}***"
                     else:
-                        _LOGGER.warning(f"[HomeAIVision] Failed to download image, status code: {response.status}")
-            except Exception as e:
-                _LOGGER.error(f"[HomeAIVision] Unexpected error: {e}")
-            
-            await asyncio.sleep(time_between_requests)
+                        cam_url_log = cam_url
+                    _LOGGER.debug(
+                        f"[HomeAIVision] Camera URL: {cam_url_log}"
+                    )
+
+                    async with session.get(cam_url) as response:
+                        if response.status == 200:
+                            _LOGGER.info(
+                                "[HomeAIVision] Image successfully downloaded"
+                            )
+                            image_data = await response.read()
+                            (
+                                object_detected,
+                                modified_image_data,
+                                detected_object_name,
+                            ) = await analyze_and_draw_object(
+                                image_data,
+                                entry.data.get(CONF_AZURE_API_KEY),
+                                entry.data.get(CONF_AZURE_ENDPOINT),
+                                detected_objects,
+                                confidence_threshold,
+                            )
+                            if object_detected and modified_image_data:
+                                save_path = await save_image(
+                                    cam_frames_path,
+                                    modified_image_data,
+                                    organize_by_day,
+                                    max_images,
+                                )
+                                _LOGGER.info(
+                                    f"[HomeAIVision] Saving image: {save_path}"
+                                )
+
+                                # Increment the Azure request counter
+                                hass.data.setdefault(DOMAIN, {}).setdefault('azure_request_counts', {})
+                                counts = hass.data[DOMAIN]['azure_request_counts']
+                                counts[device_id] = counts.get(device_id, 0) + 1
+
+                                # Signal the entity to update its state
+                                async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
+
+                                # Send notification if enabled
+                                if send_notifications:
+                                    language = device_config.get(
+                                        "notification_language", "en"
+                                    )
+                                    relative_path = save_path.replace(
+                                        hass.config.path(), ""
+                                    ).lstrip("/")
+                                    await send_notification(
+                                        hass,
+                                        detected_object_name,
+                                        relative_path,
+                                        organize_by_day,
+                                        language,
+                                    )
+                        else:
+                            _LOGGER.warning(
+                                f"[HomeAIVision] Failed to download image, "
+                                f"status code: {response.status}"
+                            )
+                except ClientConnectorError:
+                    _LOGGER.error(
+                        f"[HomeAIVision] Unable to connect to the camera at "
+                        f"{cam_url}. Please check if the camera is online "
+                        f"and the URL is correct."
+                    )
+                    pn_create(
+                        hass,
+                        (
+                            f"Unable to connect to the camera at {cam_url}. "
+                            "Please check if the camera is online and the "
+                            "URL is correct."
+                        ),
+                        title="HomeAIVision Camera Connection Error",
+                        notification_id=f"homeaivision_camera_error_{device_id}",
+                    )
+                except Exception as e:
+                    _LOGGER.error(f"[HomeAIVision] Unexpected error: {e}")
+
+                await asyncio.sleep(time_between_requests)
+
+    # Start the periodic check in the background
+    hass.loop.create_task(periodic_check())

@@ -37,3 +37,6 @@ config_entries.json
 
 # Ignore js.map
 *.js.map
+
+# Ignore previous versions in backup folders
+ver1*/

@@ -5,7 +5,6 @@ import aiofiles
 from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 async def send_notification(hass, detected_object, image_path=None, organize_by_day=True, notification_language='en'):
     """
@@ -22,14 +21,14 @@ async def send_notification(hass, detected_object, image_path=None, organize_by_
         message_key = f"{detected_object}_detected"
 
         base_url = get_url(hass, prefer_external=False, allow_internal=True)
-        _LOGGER.debug(f"[HomeAIVision] Base URL for notification: {base_url}")
+        # _LOGGER.debug(f"[HomeAIVision] Base URL for notification: {base_url}")
         message = await get_translated_message(notification_language, message_key)
 
         data = {"message": message}
         if image_path:
             corrected_image_path = image_path.lstrip('/').replace('www/', '', 1)
             image_url = f"{base_url}/local/{corrected_image_path}"
-            _LOGGER.debug(f"[HomeAIVision] Full image URL for notification: {image_url}")
+            # _LOGGER.debug(f"[HomeAIVision] Full image URL for notification: {image_url}")
             data["data"] = {
                 "attachment": {
                     "content-type": "jpeg",

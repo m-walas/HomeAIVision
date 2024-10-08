@@ -116,6 +116,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
     and saving images where objects are detected.
     """
     device_id = device_config['id']
+    store = hass.data[DOMAIN]['store']
     cam_frames_path = hass.config.path("www/HomeAIVision/cam_frames/")
     days_to_keep = device_config.get("days_to_keep", 7)
     organize_by_day = device_config.get("organize_by_day", True)
@@ -150,9 +151,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
 
                     async with session.get(cam_url) as response:
                         if response.status == 200:
-                            _LOGGER.info(
-                                "[HomeAIVision] Image successfully downloaded"
-                            )
+                            # _LOGGER.info("[HomeAIVision] Image successfully downloaded")
                             image_data = await response.read()
                             (
                                 object_detected,
@@ -172,19 +171,20 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                     organize_by_day,
                                     max_images,
                                 )
-                                _LOGGER.info(
-                                    f"[HomeAIVision] Saving image: {save_path}"
-                                )
+                                # _LOGGER.info(f"[HomeAIVision] Saving image: {save_path}")
 
-                                # Increment the Azure request counter
-                                hass.data.setdefault(DOMAIN, {}).setdefault('azure_request_counts', {})
-                                counts = hass.data[DOMAIN]['azure_request_counts']
-                                counts[device_id] = counts.get(device_id, 0) + 1
+                                # INFO: Increment the Azure request counter
+                                device = store.get_device(device_id)
+                                if device:
+                                    device.azure_request_count += 1
+                                    await store.async_save()
+                                    async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
+                                else:
+                                    _LOGGER.error(
+                                        f"[HomeAIVision] Device {device_id} not found in store"
+                                    )
 
-                                # Signal the entity to update its state
-                                async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
-
-                                # Send notification if enabled
+                                #INFO: Send notification if enabled
                                 if send_notifications:
                                     language = device_config.get(
                                         "notification_language", "en"
@@ -225,5 +225,5 @@ async def setup_periodic_camera_check(hass, entry, device_config):
 
                 await asyncio.sleep(time_between_requests)
 
-    # Start the periodic check in the background
+    # INFO: Start the periodic check in the background
     hass.loop.create_task(periodic_check())

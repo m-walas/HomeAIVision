@@ -18,9 +18,11 @@ class DeviceData:
     organize_by_day = attr.ib(type=bool, default=True)
     max_images = attr.ib(type=int, default=30)
     time_between_requests = attr.ib(type=int, default=30)
+    azure_request_count = attr.ib(type=int, default=0)
 
     @classmethod
     def from_dict(cls, data):
+        data.setdefault('azure_request_count', 0)
         return cls(**data)
 
     def asdict(self):

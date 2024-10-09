@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.components.persistent_notification import create as pn_create
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DOMAIN,
@@ -19,7 +20,7 @@ from .const import (
     CONF_DAYS_TO_KEEP,
     CONF_SEND_NOTIFICATIONS,
     CONF_NOTIFICATION_LANGUAGE,
-    CONF_DETECTED_OBJECT,
+    CONF_TO_DETECT_OBJECT,
     CONF_CONFIDENCE_THRESHOLD,
     CONF_INTEGRATION_TITLE,
 )
@@ -125,23 +126,11 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 errors["base"] = "camera_url_invalid"
             else:
                 device_id = str(uuid.uuid4())
-                new_device = {
-                    "id": device_id,
-                    "name": user_input.get("name", "Camera"),
-                    "url": user_input[CONF_CAM_URL],
-                    "detected_object": user_input[CONF_DETECTED_OBJECT],
-                    "confidence_threshold": user_input[CONF_CONFIDENCE_THRESHOLD],
-                    "send_notifications": user_input.get(CONF_SEND_NOTIFICATIONS, False),
-                    "organize_by_day": user_input.get(CONF_ORGANIZE_BY_DAY, True),
-                    "max_images": user_input.get(CONF_MAX_IMAGES, 30),
-                    "time_between_requests": user_input.get(CONF_TIME_BETWEEN_REQUESTS, 30),
-                }
-
-                device = DeviceData(
+                new_device = DeviceData(
                     id=device_id,
                     name=user_input.get("name", "Camera"),
                     url=user_input[CONF_CAM_URL],
-                    detected_object=user_input[CONF_DETECTED_OBJECT],
+                    detected_object=user_input[CONF_TO_DETECT_OBJECT],
                     confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, False),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, True),
@@ -150,9 +139,9 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     azure_request_count=0
                 )
 
-                _LOGGER.debug(f"[HomeAIVision] Adding new device: {device.asdict()}")
+                _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
 
-                await self.store.async_add_device(device)
+                await self.store.async_add_device(new_device)
 
                 await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
@@ -163,7 +152,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Required("name", default="Camera"): str,
                 vol.Required(CONF_CAM_URL): str,
-                vol.Required(CONF_DETECTED_OBJECT, default='person'): vol.In({
+                vol.Required(CONF_TO_DETECT_OBJECT, default='person'): vol.In({
                     'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
                 }),
                 vol.Required(CONF_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
@@ -208,7 +197,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     id=device.id,
                     name=user_input.get("name", device.name),
                     url=user_input[CONF_CAM_URL],
-                    detected_object=user_input[CONF_DETECTED_OBJECT],
+                    detected_object=user_input[CONF_TO_DETECT_OBJECT],
                     confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
@@ -231,7 +220,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Required("name", default=device.name): str,
                 vol.Required(CONF_CAM_URL, default=device.url): str,
-                vol.Required(CONF_DETECTED_OBJECT, default=device.detected_object): vol.In({
+                vol.Required(CONF_TO_DETECT_OBJECT, default=device.detected_object): vol.In({
                     'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
                 }),
                 vol.Required(CONF_CONFIDENCE_THRESHOLD, default=device.confidence_threshold): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
@@ -256,7 +245,8 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 if entry.unique_id.startswith(f"{self.device_id}_"):
                     entity_registry.async_remove(entry.entity_id)
 
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            # NOTE: Notify the integration to remove the device
+            async_dispatcher_send(self.hass, f"{DOMAIN}_device_removed")
 
             return self.async_create_entry(title="Camera Removed", data={})
         else:

@@ -94,7 +94,7 @@ async def clean_up_old_images(base_path, days_to_keep):
                     await asyncio.to_thread(shutil.rmtree, folder_path)
                     _LOGGER.info(f"[HomeAIVision] Deleted old image folder: {folder_path}")
             except ValueError:
-                #! Ignore directories that do not match the expected date format
+                # NOTE: Ignore directories that do not match the expected date format
                 continue
             except Exception as e:
                 _LOGGER.error(f"[HomeAIVision] Failed to delete {folder_path}: {e}")

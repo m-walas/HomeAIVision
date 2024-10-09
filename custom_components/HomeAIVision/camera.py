@@ -17,7 +17,7 @@ from .const import (
     DOMAIN,
     CONF_AZURE_API_KEY,
     CONF_AZURE_ENDPOINT,
-    CONF_DETECTED_OBJECT,
+    CONF_TO_DETECT_OBJECT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
     days_to_keep = device_config.get("days_to_keep", 7)
     organize_by_day = device_config.get("organize_by_day", True)
     max_images = device_config.get("max_images", 30)
-    detected_objects = [device_config.get(CONF_DETECTED_OBJECT)]
+    to_detect_objects = [device_config.get(CONF_TO_DETECT_OBJECT)]
     confidence_threshold = device_config.get("confidence_threshold", 0.6)
     time_between_requests = device_config.get("time_between_requests", 30)
     send_notifications = device_config.get("send_notifications", False)
@@ -140,6 +140,15 @@ async def setup_periodic_camera_check(hass, entry, device_config):
         async with aiohttp.ClientSession() as session:
             while True:
                 try:
+                    # NOTE: Get the latest device configuration
+                    device = store.get_device(device_id)
+                    if not device:
+                        _LOGGER.error(f"[HomeAIVision] Device {device_id} not found")
+                        break
+                    to_detect_objects = [device.detected_object]
+                    confidence_threshold = device.confidence_threshold
+
+                    _LOGGER.debug(f"[HomeAIVision] Current to detect objects: {to_detect_objects}")
                     if "pwd=" in cam_url:
                         pwd_index = cam_url.find("pwd=") + len("pwd=")
                         cam_url_log = f"{cam_url[:pwd_index]}***"
@@ -161,7 +170,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                 image_data,
                                 entry.data.get(CONF_AZURE_API_KEY),
                                 entry.data.get(CONF_AZURE_ENDPOINT),
-                                detected_objects,
+                                to_detect_objects,
                                 confidence_threshold,
                             )
                             if object_detected and modified_image_data:
@@ -184,7 +193,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                         f"[HomeAIVision] Device {device_id} not found in store"
                                     )
 
-                                #INFO: Send notification if enabled
+                                # NOTE: Send notification if enabled
                                 if send_notifications:
                                     language = device_config.get(
                                         "notification_language", "en"
@@ -225,5 +234,5 @@ async def setup_periodic_camera_check(hass, entry, device_config):
 
                 await asyncio.sleep(time_between_requests)
 
-    # INFO: Start the periodic check in the background
+    # NOTE: Start the periodic check in the background
     hass.loop.create_task(periodic_check())

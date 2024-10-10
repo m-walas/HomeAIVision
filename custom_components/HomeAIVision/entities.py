@@ -37,6 +37,10 @@ class AzureRequestCountEntity(BaseHomeAIVisionEntity, SensorEntity):
         self._attr_name = f"{self._device_name} Azure Request Count"
 
     @property
+    def icon(self):
+        return "mdi:counter"
+
+    @property
     def state(self):
         device_data = self.store.get_device(self._device_id)
         if device_data:
@@ -58,6 +62,10 @@ class CameraUrlEntity(BaseHomeAIVisionEntity, SensorEntity):
         super().__init__(hass, device_config)
         self._attr_unique_id = f"{self._device_id}_camera_url"
         self._attr_name = f"{self._device_name} Camera URL"
+
+    @property
+    def icon(self):
+        return "mdi:link"
 
     @property
     def state(self):
@@ -136,7 +144,11 @@ class GlobalAzureRequestCountEntity(SensorEntity):
         """Initialize the global Azure request count entity."""
         super().__init__()
         self.hass = hass
-        self.store: HomeAIVisionStore = hass.data[DOMAIN]['store']
+        try:
+            self.store: HomeAIVisionStore = hass.data[DOMAIN]['store']
+        except KeyError:
+            _LOGGER.error("[HomeAIVision] Store not found in hass.data")
+            self.store = None
         self._attr_unique_id = f"{DOMAIN}_global_azure_request_count"
         self._attr_name = "Global Azure Request Count"
         self._attr_device_info = {
@@ -147,14 +159,23 @@ class GlobalAzureRequestCountEntity(SensorEntity):
         }
 
     @property
+    def icon(self):
+        return "mdi:counter"
+
+    @property
     def state(self):
         """Return the state of the global Azure request count."""
-        return self.store.get_global_counter()
+        if self.store:
+            return self.store.get_global_counter()
+        return None
 
     async def async_added_to_hass(self):
         """Handle addition of the entity to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_global_update", self.async_write_ha_state
+        if self.store:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass, f"{DOMAIN}_global_update", self.async_write_ha_state
+                )
             )
-        )
+        else:
+            _LOGGER.error("[HomeAIVision] Cannot add dispatcher because store is None")

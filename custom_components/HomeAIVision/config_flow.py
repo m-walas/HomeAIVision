@@ -5,9 +5,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.components.persistent_notification import create as pn_create
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 
 from .const import (
     DOMAIN,
@@ -237,17 +237,27 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
         device = self.store.get_device(self.device_id)
 
         if device:
+            # NOTE: Delete device from store
             await self.store.async_remove_device(self.device_id)
 
+            # NOTE: Delete device from Device Registry
+            device_registry = async_get_device_registry(self.hass)
+            device_entry = device_registry.async_get(device.id)
+
+            if device_entry:
+                try:
+                    device_registry.async_remove_device(device_entry.id)
+                except Exception as e:
+                    _LOGGER.error(f"Failed to remove device {device.id}: {e}")
+                    return self.async_abort(reason="remove_failed")
+
+            # NOTE: Delete all entities associated with this device
             entity_registry = async_get_entity_registry(self.hass)
             entries = async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
 
             for entry in entries:
                 if entry.unique_id.startswith(f"{self.device_id}_"):
                     entity_registry.async_remove(entry.entity_id)
-
-            # NOTE: Notify the integration to remove the device
-            async_dispatcher_send(self.hass, f"{DOMAIN}_device_removed")
 
             return self.async_create_entry(title="Camera Removed", data={})
         else:

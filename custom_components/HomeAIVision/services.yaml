@@ -1,0 +1,16 @@
+manual_analyze:
+  description: "Ręcznie uruchamia analizę dla określonego urządzenia."
+  fields:
+    device_id:
+      description: "ID urządzenia, które ma zostać przeanalizowane."
+      example: "7280af57-a5d2-45a0-a806-e2e789e2092a"
+
+reset_local_counter:
+  description: "Resetuje lokalny licznik żądań Azure dla określonego urządzenia."
+  fields:
+    device_id:
+      description: "ID urządzenia, dla którego licznik ma zostać zresetowany."
+      example: "7280af57-a5d2-45a0-a806-e2e789e2092a"
+
+reset_global_counter:
+  description: "Resetuje globalny licznik żądań Azure."

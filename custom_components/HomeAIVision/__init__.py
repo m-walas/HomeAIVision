@@ -1,11 +1,22 @@
 import logging
-from homeassistant.core import HomeAssistant
+import voluptuous as vol
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN, CONF_AZURE_API_KEY, CONF_AZURE_ENDPOINT
+from .const import DOMAIN
 from .camera import setup_periodic_camera_check
 from .store import HomeAIVisionStore
+from .actions import (
+    ACTION_MANUAL_ANALYZE,
+    ACTION_RESET_LOCAL_COUNTER,
+    ACTION_RESET_GLOBAL_COUNTER,
+    handle_manual_analyze,
+    handle_reset_local_counter,
+    handle_reset_global_counter,
+    MANUAL_ANALYZE_SCHEMA,
+    RESET_LOCAL_COUNTER_SCHEMA
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,61 +27,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HomeAIVision integration from a config entry."""
     _LOGGER.debug(f"[HomeAIVision] async_setup_entry called with entry.data: {entry.data}")
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    try:   
+        if DOMAIN not in hass.data:
+            hass.data[DOMAIN] = {}
 
-    # NOTE: Initialize HomeAIVisionStore and load devices
-    store = HomeAIVisionStore(hass)
-    await store.async_load()
-    hass.data[DOMAIN]['store'] = store
+        # NOTE: Initialize HomeAIVisionStore and load devices
+        store = HomeAIVisionStore(hass)
+        await store.async_load()
+        hass.data[DOMAIN]['store'] = store
 
-    # NOTE: Register services
-    from .services import (
-        SERVICE_MANUAL_ANALYZE,
-        SERVICE_RESET_LOCAL_COUNTER,
-        SERVICE_RESET_GLOBAL_COUNTER,
-        handle_manual_analyze,
-        handle_reset_local_counter,
-        handle_reset_global_counter,
-    )
-    
-    import voluptuous as vol
+        # Definicja wewnętrznych funkcji obsługujących akcje
+        async def service_manual_analyze(call: ServiceCall):
+            await handle_manual_analyze(call, hass)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_MANUAL_ANALYZE,
-        handle_manual_analyze,
-        vol.Schema({
-            vol.Required('device_id'): vol.All(str, vol.Length(min=1)),
-        })
-    )
+        async def service_reset_local_counter(call: ServiceCall):
+            await handle_reset_local_counter(call, hass)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET_LOCAL_COUNTER,
-        handle_reset_local_counter,
-        vol.Schema({
-            vol.Required('device_id'): vol.All(str, vol.Length(min=1)),
-        })
-    )
+        async def service_reset_global_counter(call: ServiceCall):
+            await handle_reset_global_counter(call, hass)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET_GLOBAL_COUNTER,
-        handle_reset_global_counter,
-    )
-
-    # NOTE: Forward setup to platforms
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # NOTE: Start periodic camera checks for each device
-    devices = store.get_devices()
-    for device_config in devices.values():
-        hass.async_create_task(
-            setup_periodic_camera_check(hass, entry, device_config.asdict())
+        # NOTE: Register services (actions)
+        hass.services.async_register(
+            DOMAIN,
+            ACTION_MANUAL_ANALYZE,
+            service_manual_analyze,
+            schema=MANUAL_ANALYZE_SCHEMA
         )
 
-    return True
+        hass.services.async_register(
+            DOMAIN,
+            ACTION_RESET_LOCAL_COUNTER,
+            service_reset_local_counter,
+            schema=RESET_LOCAL_COUNTER_SCHEMA
+        )
+
+        hass.services.async_register(
+            DOMAIN,
+            ACTION_RESET_GLOBAL_COUNTER,
+            service_reset_global_counter,
+            schema=vol.Schema({})
+        )
+
+        # NOTE: Forward setup to platforms
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        # NOTE: Start periodic camera checks for each device
+        devices = store.get_devices()
+        for device_config in devices.values():
+            hass.async_create_task(
+                setup_periodic_camera_check(hass, entry, device_config.asdict())
+            )
+
+        return True
+    except Exception as e:
+        _LOGGER.error(f"[HomeAIVision] async_setup_entry failed with exception: {e}")
+        return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

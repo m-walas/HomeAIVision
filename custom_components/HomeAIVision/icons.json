@@ -1,0 +1,7 @@
+{
+  "services": {
+    "manual_analyze": { "service": "mdi:play-circle" },
+    "reset_local_counter": { "service": "mdi:counter" },
+    "reset_global_counter": { "service": "mdi:counter-reset" }
+  }
+}

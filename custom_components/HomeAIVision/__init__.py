@@ -46,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_devices(hass: HomeAssistant, entry: ConfigEntry, store: HomeAIVisionStore):
     """Set up devices (cameras) from the store."""
     devices = store.get_devices()
+    _LOGGER.debug(f"[HomeAIVision] Setting up {len(devices)} devices.")
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""

@@ -11,8 +11,9 @@ from .store import HomeAIVisionStore
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class BaseHomeAIVisionEntity(Entity):
-    """Podstawowa klasa dla encji HomeAIVision."""
+    """Base class for HomeAIVision entities."""
 
     def __init__(self, hass, device_config):
         self.hass = hass
@@ -28,7 +29,7 @@ class BaseHomeAIVisionEntity(Entity):
 
 # NOTE: Sensor entities
 class AzureRequestCountEntity(BaseHomeAIVisionEntity, SensorEntity):
-    """Encja reprezentująca licznik zapytań do Azure."""
+    """Entity representing the Azure request count."""
 
     def __init__(self, hass, device_config):
         super().__init__(hass, device_config)
@@ -36,29 +37,22 @@ class AzureRequestCountEntity(BaseHomeAIVisionEntity, SensorEntity):
         self._attr_name = f"{self._device_name} Azure Request Count"
 
     @property
-    def name(self):
-        device_data = self.store.get_device(self._device_id)
-        if device_data:
-            return f"{device_data.name} Azure Request Count"
-        return "Unknown Azure Request Count"
-
-    @property
     def state(self):
         device_data = self.store.get_device(self._device_id)
         if device_data:
-            return device_data.azure_request_count
+            return device_data.device_azure_request_count
         return None
 
     async def async_added_to_hass(self):
-        """Obsługa dodania encji do Home Assistant."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, f"{DOMAIN}_{self._device_id}_update", self.async_write_ha_state
             )
         )
 
+
 class CameraUrlEntity(BaseHomeAIVisionEntity, SensorEntity):
-    """Encja reprezentująca URL kamery."""
+    """Entity representing the camera URL."""
 
     def __init__(self, hass, device_config):
         super().__init__(hass, device_config)
@@ -72,9 +66,10 @@ class CameraUrlEntity(BaseHomeAIVisionEntity, SensorEntity):
             return device_data.url
         return None
 
+
 # NOTE: Configuration entities
 class ConfidenceThresholdEntity(BaseHomeAIVisionEntity, NumberEntity):
-    """Encja reprezentująca próg pewności detekcji."""
+    """Entity representing the detection confidence threshold."""
     
     def __init__(self, hass, device_config):
         super().__init__(hass, device_config)
@@ -100,8 +95,9 @@ class ConfidenceThresholdEntity(BaseHomeAIVisionEntity, NumberEntity):
             await self.store.async_update_device(self._device_id, device_data)
             self.async_write_ha_state()
 
+
 class DetectedObjectEntity(BaseHomeAIVisionEntity, SelectEntity):
-    """Encja reprezentująca wykrywany obiekt."""
+    """Entity representing the detected object."""
     
     def __init__(self, hass, device_config):
         super().__init__(hass, device_config)
@@ -112,7 +108,7 @@ class DetectedObjectEntity(BaseHomeAIVisionEntity, SelectEntity):
 
     @property
     def options(self):
-        """Zwraca listę dostępnych opcji."""
+        """Return a set of selectable options."""
         return self._options
 
     @property
@@ -131,3 +127,34 @@ class DetectedObjectEntity(BaseHomeAIVisionEntity, SelectEntity):
                 self.async_write_ha_state()
         else:
             _LOGGER.error(f"Invalid option selected: {option}")
+
+# NOTE: Global sensor entities
+class GlobalAzureRequestCountEntity(SensorEntity):
+    """Entity representing the global Azure request count."""
+
+    def __init__(self, hass):
+        """Initialize the global Azure request count entity."""
+        super().__init__()
+        self.hass = hass
+        self.store: HomeAIVisionStore = hass.data[DOMAIN]['store']
+        self._attr_unique_id = f"{DOMAIN}_global_azure_request_count"
+        self._attr_name = "Global Azure Request Count"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, "global")},
+            "name": "HomeAIVision",
+            "manufacturer": "HomeAIVision",
+            "model": "Intelligent Camera",
+        }
+
+    @property
+    def state(self):
+        """Return the state of the global Azure request count."""
+        return self.store.get_global_counter()
+
+    async def async_added_to_hass(self):
+        """Handle addition of the entity to Home Assistant."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{DOMAIN}_global_update", self.async_write_ha_state
+            )
+        )

@@ -73,6 +73,7 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_AZURE_API_KEY: self.temp_config[CONF_AZURE_API_KEY],
                         CONF_AZURE_ENDPOINT: self.temp_config[CONF_AZURE_ENDPOINT],
                         "devices": {},
+                        "global": {"global_azure_request_count": 0},
                     }
                 )
 
@@ -136,7 +137,6 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, True),
                     max_images=user_input.get(CONF_MAX_IMAGES, 30),
                     time_between_requests=user_input.get(CONF_TIME_BETWEEN_REQUESTS, 30),
-                    azure_request_count=0
                 )
 
                 _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
@@ -160,6 +160,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
                 vol.Optional(CONF_MAX_IMAGES, default=30): int,
                 vol.Optional(CONF_TIME_BETWEEN_REQUESTS, default=30): int,
+                vol.Optional(CONF_DAYS_TO_KEEP, default=7): int,
             }),
             errors=errors,
         )
@@ -203,7 +204,6 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
                     max_images=user_input.get(CONF_MAX_IMAGES, device.max_images),
                     time_between_requests=user_input.get(CONF_TIME_BETWEEN_REQUESTS, device.time_between_requests),
-                    azure_request_count=device.azure_request_count # NOTE: Keep the counter when editing
                 )
 
                 await self.store.async_update_device(self.device_id, updated_device)
@@ -228,6 +228,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=device.organize_by_day): bool,
                 vol.Optional(CONF_MAX_IMAGES, default=device.max_images): int,
                 vol.Optional(CONF_TIME_BETWEEN_REQUESTS, default=device.time_between_requests): int,
+                vol.Optional(CONF_DAYS_TO_KEEP, default=device.days_to_keep): int,
             }),
             errors=errors,
         )

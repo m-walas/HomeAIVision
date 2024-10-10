@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities = []
     for device_data in devices.values():
         device_config = device_data.asdict()
-        # _LOGGER.debug(f"[HomeAIVision] Setting up select entities for device: {device_config}")
+        _LOGGER.debug(f"[HomeAIVision] Setting up select entities for device: {device_config}")
         entities.extend([
             # NOTE: ONLY select entities
             DetectedObjectEntity(hass, device_config),
@@ -24,6 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     if entities:
         async_add_entities(entities)
-        # _LOGGER.debug(f"[HomeAIVision] Added select entities: {[entity.name for entity in entities]}")
+        _LOGGER.debug(f"[HomeAIVision] Added select entities: {[entity.name for entity in entities]}")
     else:
         _LOGGER.warning("[HomeAIVision] No select entities to add.")

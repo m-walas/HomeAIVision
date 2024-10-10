@@ -19,6 +19,7 @@ from .const import (
     CONF_AZURE_ENDPOINT,
     CONF_TO_DETECT_OBJECT,
 )
+from .store import HomeAIVisionStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ async def analyze_and_draw_object(
 
     try:
         async with aiohttp.ClientSession() as session:
-            _LOGGER.debug("[HomeAIVision] Starting analyze")
             async with session.post(
                 f"{azure_endpoint}/vision/v3.0/analyze",
                 headers=headers,
@@ -160,7 +160,6 @@ async def setup_periodic_camera_check(hass, entry, device_config):
 
                     async with session.get(cam_url) as response:
                         if response.status == 200:
-                            # _LOGGER.info("[HomeAIVision] Image successfully downloaded")
                             image_data = await response.read()
                             (
                                 object_detected,
@@ -173,6 +172,23 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                 to_detect_objects,
                                 confidence_threshold,
                             )
+
+                            # NOTE: Increment the Azure request counter
+                            device = store.get_device(device_id)
+                            if device:
+                                device.device_azure_request_count += 1
+                                await store.async_save()
+                                async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
+                                _LOGGER.info(f"[HomeAIVision] Device {device_id} Azure request count: {device.device_azure_request_count}")
+                            else:
+                                _LOGGER.error(
+                                    f"[HomeAIVision] Device {device_id} not found in store"
+                                )
+
+                            # NOTE: Increment global counter
+                            await store.async_increment_global_counter()
+                            _LOGGER.info(f"[HomeAIVision] Global counter Azure: {store.get_global_counter()}")
+
                             if object_detected and modified_image_data:
                                 save_path = await save_image(
                                     cam_frames_path,
@@ -181,17 +197,6 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                     max_images,
                                 )
                                 # _LOGGER.info(f"[HomeAIVision] Saving image: {save_path}")
-
-                                # INFO: Increment the Azure request counter
-                                device = store.get_device(device_id)
-                                if device:
-                                    device.azure_request_count += 1
-                                    await store.async_save()
-                                    async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
-                                else:
-                                    _LOGGER.error(
-                                        f"[HomeAIVision] Device {device_id} not found in store"
-                                    )
 
                                 # NOTE: Send notification if enabled
                                 if send_notifications:

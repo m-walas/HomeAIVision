@@ -3,8 +3,9 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_AZURE_API_KEY, CONF_AZURE_ENDPOINT
 from .camera import setup_periodic_camera_check
 from .store import HomeAIVisionStore
 from .actions import (
@@ -13,9 +14,7 @@ from .actions import (
     ACTION_RESET_GLOBAL_COUNTER,
     handle_manual_analyze,
     handle_reset_local_counter,
-    handle_reset_global_counter,
-    MANUAL_ANALYZE_SCHEMA,
-    RESET_LOCAL_COUNTER_SCHEMA
+    handle_reset_global_counter
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,12 +30,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if DOMAIN not in hass.data:
             hass.data[DOMAIN] = {}
 
-        # NOTE: Initialize HomeAIVisionStore and load devices
+        # NOTE: Initialize HomeAIVisionStore
         store = HomeAIVisionStore(hass)
         await store.async_load()
         hass.data[DOMAIN]['store'] = store
 
-        # Definicja wewnętrznych funkcji obsługujących akcje
+        # NOTE: Keep Azure API Key and Endpoint in hass.data
+        hass.data[DOMAIN]['azure_api_key'] = entry.data.get(CONF_AZURE_API_KEY)
+        hass.data[DOMAIN]['azure_endpoint'] = entry.data.get(CONF_AZURE_ENDPOINT)
+
+        # NOTE: Define internal functions defines the services
         async def service_manual_analyze(call: ServiceCall):
             await handle_manual_analyze(call, hass)
 
@@ -51,14 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             ACTION_MANUAL_ANALYZE,
             service_manual_analyze,
-            schema=MANUAL_ANALYZE_SCHEMA
+            schema=vol.Schema({vol.Required('device_id'): cv.string})
         )
 
         hass.services.async_register(
             DOMAIN,
             ACTION_RESET_LOCAL_COUNTER,
             service_reset_local_counter,
-            schema=RESET_LOCAL_COUNTER_SCHEMA
+            schema=vol.Schema({vol.Required('device_id'): cv.string})
         )
 
         hass.services.async_register(

@@ -13,7 +13,7 @@ class DeviceData:
     id = attr.ib(type=str)
     name = attr.ib(type=str)
     url = attr.ib(type=str)
-    detected_object = attr.ib(type=str)
+    to_detect_object = attr.ib(type=str)
     confidence_threshold = attr.ib(type=float)
     send_notifications = attr.ib(type=bool, default=False)
     organize_by_day = attr.ib(type=bool, default=True)

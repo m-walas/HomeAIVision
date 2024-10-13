@@ -131,7 +131,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     id=device_id,
                     name=user_input.get("name", "Camera"),
                     url=user_input[CONF_CAM_URL],
-                    detected_object=user_input[CONF_TO_DETECT_OBJECT],
+                    to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
                     confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, False),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, True),
@@ -198,7 +198,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     id=device.id,
                     name=user_input.get("name", device.name),
                     url=user_input[CONF_CAM_URL],
-                    detected_object=user_input[CONF_TO_DETECT_OBJECT],
+                    to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
                     confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
@@ -220,7 +220,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Required("name", default=device.name): str,
                 vol.Required(CONF_CAM_URL, default=device.url): str,
-                vol.Required(CONF_TO_DETECT_OBJECT, default=device.detected_object): vol.In({
+                vol.Required(CONF_TO_DETECT_OBJECT, default=device.to_detect_object): vol.In({
                     'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
                 }),
                 vol.Required(CONF_CONFIDENCE_THRESHOLD, default=device.confidence_threshold): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),

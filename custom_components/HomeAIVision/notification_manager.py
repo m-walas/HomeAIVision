@@ -6,19 +6,19 @@ from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
-async def send_notification(hass, detected_object, image_path=None, organize_by_day=True, notification_language='en'):
+async def send_notification(hass, to_detect_object, image_path=None, organize_by_day=True, notification_language='en'):
     """
     Send a notification message via Home Assistant with an optional image attachment.
 
     Args:
         hass: The Home Assistant instance.
-        detected_object (str): The object that was detected.
+        to_detect_object (str): The object that was detected.
         image_path (str, optional): The path to the image within the `www` directory.
         organize_by_day (bool, optional): Indicates if images are organized by day.
         notification_language (str, optional): The language for the notification.
     """
     try:
-        message_key = f"{detected_object}_detected"
+        message_key = f"{to_detect_object}_detected"
 
         base_url = get_url(hass, prefer_external=False, allow_internal=True)
         _LOGGER.debug(f"[HomeAIVision] Base URL for notification: {base_url}")

@@ -22,6 +22,8 @@ from .const import (
 from .store import HomeAIVisionStore
 
 _LOGGER = logging.getLogger(__name__)
+# _LOGGER = logging.getLogger("homeaivision")
+# _AZURE_LOGGER = logging.getLogger("azure_cognitiveservices_vision_computervision")
 
 async def analyze_and_draw_object(
     image_data, azure_api_key, azure_endpoint, objects, confidence_threshold
@@ -64,9 +66,9 @@ async def analyze_and_draw_object(
                     return False, None, None
 
                 response_json = await response.json()
-                _LOGGER.debug(
-                    f"[HomeAIVision] Azure response: {response_json}"
-                )
+                _LOGGER.debug(f"Azure response: {response_json}")
+                # _AZURE_LOGGER.info(f"Received response from Azure: {response_json}")
+
                 image = Image.open(io.BytesIO(image_data))
                 draw = ImageDraw.Draw(image)
 
@@ -95,7 +97,8 @@ async def analyze_and_draw_object(
                 image.save(buffered, format="JPEG")
                 return object_detected, buffered.getvalue(), detected_object_name
     except Exception as e:
-        _LOGGER.error(f"[HomeAIVision] Error during analysis: {e}")
+        _LOGGER.error(f"Error during analysis: {e}")
+        # _AZURE_LOGGER.exception("Exception occurred during Azure analysis")
         return False, None, None
 
 
@@ -121,7 +124,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
     days_to_keep = device_config.get("days_to_keep", 7)
     organize_by_day = device_config.get("organize_by_day", True)
     max_images = device_config.get("max_images", 30)
-    to_detect_objects = [device_config.get(CONF_TO_DETECT_OBJECT)]
+    to_detect_object = [device_config.get(CONF_TO_DETECT_OBJECT)]
     confidence_threshold = device_config.get("confidence_threshold", 0.6)
     time_between_requests = device_config.get("time_between_requests", 30)
     send_notifications = device_config.get("send_notifications", False)
@@ -145,10 +148,10 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                     if not device:
                         _LOGGER.error(f"[HomeAIVision] Device {device_id} not found")
                         break
-                    to_detect_objects = [device.detected_object]
+                    to_detect_object = [device.to_detect_object]
                     confidence_threshold = device.confidence_threshold
 
-                    _LOGGER.debug(f"[HomeAIVision] Current to detect objects: {to_detect_objects}")
+                    _LOGGER.debug(f"[HomeAIVision] Current to detect objects: {to_detect_object}")
                     if "pwd=" in cam_url:
                         pwd_index = cam_url.find("pwd=") + len("pwd=")
                         cam_url_log = f"{cam_url[:pwd_index]}***"
@@ -169,7 +172,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                                 image_data,
                                 entry.data.get(CONF_AZURE_API_KEY),
                                 entry.data.get(CONF_AZURE_ENDPOINT),
-                                to_detect_objects,
+                                to_detect_object,
                                 confidence_threshold,
                             )
 
@@ -189,6 +192,7 @@ async def setup_periodic_camera_check(hass, entry, device_config):
                             await store.async_increment_global_counter()
                             _LOGGER.info(f"[HomeAIVision] Global counter Azure: {store.get_global_counter()}")
 
+                            # NOTE: Save the image if object detected
                             if object_detected and modified_image_data:
                                 save_path = await save_image(
                                     cam_frames_path,

@@ -19,7 +19,7 @@
           "send_notifications": "Toggle sending notifications on detection.",
           "organize_by_day": "Enable or disable organizing images by day.",
           "confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "detected_objects": {
+          "to_detect_object": {
             "description": "Choose which objects to detect. Ensure at least one is selected.",
             "person": "Person",
             "car": "Car",

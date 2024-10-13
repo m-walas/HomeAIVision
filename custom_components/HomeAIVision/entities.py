@@ -123,14 +123,14 @@ class DetectedObjectEntity(BaseHomeAIVisionEntity, SelectEntity):
     def current_option(self):
         device_data = self.store.get_device(self._device_id)
         if device_data:
-            return device_data.detected_object
+            return device_data.to_detect_object
         return None
 
     async def async_select_option(self, option: str):
         if option in self._options:
             device_data = self.store.get_device(self._device_id)
             if device_data:
-                device_data.detected_object = option
+                device_data.to_detect_object = option
                 await self.store.async_update_device(self._device_id, device_data)
                 self.async_write_ha_state()
         else:

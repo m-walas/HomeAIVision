@@ -119,7 +119,7 @@ class ConfigDataView(HomeAssistantView):
             "time_between_requests": config.get("time_between_requests", 30),
             "send_notifications": config.get("send_notifications", False),
             "notification_language": config.get("notification_language", "en"),
-            "detected_object": config.get("detected_object", "person"),
+            "to_detect_object": config.get("to_detect_object", "person"),
             "confidence_threshold": config.get("confidence_threshold", 0.6),
             "integration_title": config.get("integration_title", "Home AI Vision"),
         }

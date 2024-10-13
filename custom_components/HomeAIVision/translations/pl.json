@@ -19,7 +19,7 @@
           "send_notifications": "Wysyłanie powiadomień przy wykryciu.",
           "organize_by_day": "Organizowanie obrazów według dni.",
           "confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
-          "detected_objects": {
+          "to_detect_object": {
             "description": "Wybierz obiekty do wykrywania. Upewnij się, że przynajmniej jeden jest wybrany.",
             "person": "Osoba",
             "car": "Samochód",

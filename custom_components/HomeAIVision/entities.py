@@ -1,10 +1,10 @@
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.select import SelectEntity
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.dispatcher import async_dispatcher_connect # type: ignore
+from homeassistant.components.sensor import SensorEntity # type: ignore
+from homeassistant.components.number import NumberEntity # type: ignore
+from homeassistant.components.select import SelectEntity # type: ignore
+from homeassistant.helpers.entity import Entity, EntityCategory # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
@@ -62,16 +62,74 @@ class CameraUrlEntity(BaseHomeAIVisionEntity, SensorEntity):
         super().__init__(hass, device_config)
         self._attr_unique_id = f"{self._device_id}_camera_url"
         self._attr_name = f"{self._device_name} Camera URL"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def icon(self):
         return "mdi:link"
 
+    # IMPORTANT: Censor the camera URL for privacy
+    """
+    Return censored URL of camera for privacy.
+    Now it returns only the IP address and port number of the camera.
+    It is working for url format like http://<IP>:<PORT>/<rest of the url>
+    Most of the cameras have this url format.
+    Please report in issue, if additional case is needed.
+    """
     @property
     def state(self):
         device_data = self.store.get_device(self._device_id)
         if device_data:
-            return device_data.url
+            url = device_data.url
+            if url:
+                url = url.split("//")[1]
+                url = url.split("/")[0]
+                url = url.split(":")
+                url = f"{url[0]}:{url[1]}***"
+                return url
+        return None
+
+
+class DeviceIdEntity(BaseHomeAIVisionEntity, SensorEntity):
+    """Entity representing the device ID."""
+
+    def __init__(self, hass, device_config):
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_device_id"
+        self._attr_name = f"{self._device_name} Device ID"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def icon(self):
+        return "mdi:information"
+
+    @property
+    def state(self):
+        return self._device_id
+
+
+class NotificationEntity(BaseHomeAIVisionEntity, SensorEntity):
+    """
+    Entity representing the notification status.
+    On/Off state of the notification.
+    """
+
+    def __init__(self, hass, device_config):
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_notification"
+        self._attr_name = f"{self._device_name} Notification"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def icon(self):
+        return "mdi:bell"
+
+    # NOTE: If the notification state is True, return 'On' else 'Off'
+    @property
+    def state(self):
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            return "On" if device_data.send_notifications else "Off"
         return None
 
 

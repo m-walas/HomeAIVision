@@ -34,7 +34,7 @@
         "data": {
           "max_images": "Ustaw maksymalną liczbę przechowywanych zdjęć na dzień lub łącznie.",
           "days_to_keep": "Określ, ile dni przechowywać obrazy, jeśli są organizowane według dni.",
-          "notification_language": "Wybierz język powiadomień."
+          "language": "Wybierz język integracji."
         }
       }
     },

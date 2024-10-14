@@ -1,8 +1,9 @@
 import json
 import os
 import logging
-import aiofiles
-from homeassistant.helpers.network import get_url
+import aiofiles # type: ignore
+
+from homeassistant.helpers.network import get_url # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 

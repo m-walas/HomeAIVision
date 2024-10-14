@@ -1,17 +1,16 @@
 import logging
-import aiohttp
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.components.persistent_notification import (
-    create as pn_create,
-)
+import aiohttp # type: ignore
+
+from homeassistant.core import HomeAssistant, ServiceCall # type: ignore
+from homeassistant.helpers.dispatcher import async_dispatcher_send # type: ignore
+from homeassistant.components.persistent_notification import create as pn_create # type: ignore
+from aiohttp import ClientConnectorError # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
 from .camera import analyze_and_draw_object
 from .save_image_manager import save_image
 from .notification_manager import send_notification
-from aiohttp import ClientConnectorError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,8 @@ async def handle_manual_analyze(call: ServiceCall, hass: HomeAssistant):
 
                         # NOTE: Send notification if enabled
                         if device.send_notifications:
-                            language = device.notification_language or "en"
+                            language = store.get_language()
+                            _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
                             relative_path = save_path.replace(hass.config.path(), "").lstrip("/")
                             await send_notification(
                                 hass,

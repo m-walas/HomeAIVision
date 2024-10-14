@@ -1,10 +1,10 @@
 import asyncio
 import os
 import logging
-from homeassistant.components.http import HomeAssistantView
-from urllib.parse import unquote
-from .const import DOMAIN
-from aiohttp.web import json_response
+
+from homeassistant.components.http import HomeAssistantView # type: ignore
+from .const import DOMAIN # type: ignore
+from aiohttp.web import json_response # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class ConfigDataView(HomeAssistantView):
             "max_images": config.get("max_images", 30),
             "time_between_requests": config.get("time_between_requests", 30),
             "send_notifications": config.get("send_notifications", False),
-            "notification_language": config.get("notification_language", "en"),
+            "language": config.get("language", "en"),
             "to_detect_object": config.get("to_detect_object", "person"),
             "confidence_threshold": config.get("confidence_threshold", 0.6),
             "integration_title": config.get("integration_title", "Home AI Vision"),

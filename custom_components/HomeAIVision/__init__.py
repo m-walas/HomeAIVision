@@ -1,9 +1,10 @@
 import logging
-import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers import config_validation as cv
+import voluptuous as vol # type: ignore
+
+from homeassistant.core import HomeAssistant, ServiceCall # type: ignore
+from homeassistant.config_entries import ConfigEntry # type: ignore
+from homeassistant.helpers.device_registry import DeviceEntry # type: ignore
+from homeassistant.helpers import config_validation as cv # type: ignore
 
 from .const import DOMAIN, CONF_AZURE_API_KEY, CONF_AZURE_ENDPOINT
 from .camera import setup_periodic_camera_check
@@ -38,6 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # NOTE: Keep Azure API Key and Endpoint in hass.data
         hass.data[DOMAIN]['azure_api_key'] = entry.data.get(CONF_AZURE_API_KEY)
         hass.data[DOMAIN]['azure_endpoint'] = entry.data.get(CONF_AZURE_ENDPOINT)
+
+        # NOTE: Set global integration language in store from config entry
+        language = entry.data.get('global', {}).get('language', 'en')
+        await store.async_set_language(language)
 
         # NOTE: Define internal functions defines the services
         async def service_manual_analyze(call: ServiceCall):

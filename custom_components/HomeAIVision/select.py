@@ -1,6 +1,7 @@
 import logging
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+
+from homeassistant.config_entries import ConfigEntry # type: ignore
+from homeassistant.core import HomeAssistant # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore

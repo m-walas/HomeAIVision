@@ -1,10 +1,11 @@
 import logging
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+
+from homeassistant.config_entries import ConfigEntry # type: ignore
+from homeassistant.core import HomeAssistant # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
-from .entities import CameraUrlEntity, GlobalAzureRequestCountEntity, AzureRequestCountEntity
+from .entities import CameraUrlEntity, GlobalAzureRequestCountEntity, AzureRequestCountEntity, DeviceIdEntity, NotificationEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         entities.extend([
             # IMPORTANT: Only sensor entities
             AzureRequestCountEntity(hass, device_config),
+            # NOTE: Diagnostic entities
             CameraUrlEntity(hass, device_config),
+            DeviceIdEntity(hass, device_config),
+            NotificationEntity(hass, device_config),
         ])
 
     if entities:

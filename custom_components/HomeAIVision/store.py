@@ -1,6 +1,7 @@
 import logging
-import attr
-from homeassistant.helpers.storage import Store
+import attr # type: ignore
+
+from homeassistant.helpers.storage import Store # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +35,14 @@ class DeviceData:
 @attr.s
 class GlobalData:
     global_azure_request_count = attr.ib(type=int, default=0)
+    language = attr.ib(type=str, default="en")
 
     @classmethod
     def from_dict(cls, data):
-        return cls(**data)
+        return cls(
+            global_azure_request_count=data.get('global_azure_request_count', 0),
+            language=data.get('language', 'en'),
+        )
 
     def asdict(self):
         return attr.asdict(self)
@@ -114,6 +119,15 @@ class HomeAIVisionStore:
 
     def get_global_counter(self):
         return self.global_data.global_azure_request_count
+    
+    def get_language(self):
+        return self.global_data.language
+    
+    async def async_set_language(self, language: str):
+        self.global_data.language = language
+        _LOGGER.debug(f"[HomeAIVision] Set notification language to: {language}")
+        await self.async_save()
+        self._notify_listeners()
 
     def add_listener(self, listener):
         self._listeners.append(listener)

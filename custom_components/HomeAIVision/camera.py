@@ -1,15 +1,13 @@
-import aiohttp
 import asyncio
 import logging
 import io
-from PIL import Image, ImageDraw
-from datetime import datetime
-from aiohttp import ClientConnectorError
+import aiohttp # type: ignore
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.components.persistent_notification import (
-    create as pn_create,
-)
+from PIL import Image, ImageDraw # type: ignore
+from datetime import datetime # type: ignore
+from aiohttp import ClientConnectorError # type: ignore
+from homeassistant.helpers.dispatcher import async_dispatcher_send # type: ignore
+from homeassistant.components.persistent_notification import create as pn_create # type: ignore
 
 from .notification_manager import send_notification
 from .save_image_manager import save_image, clean_up_old_images
@@ -204,9 +202,8 @@ async def setup_periodic_camera_check(hass, entry, device_config):
 
                                 # NOTE: Send notification if enabled
                                 if send_notifications:
-                                    language = device_config.get(
-                                        "notification_language", "en"
-                                    )
+                                    language = store.get_language()
+                                    _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
                                     relative_path = save_path.replace(
                                         hass.config.path(), ""
                                     ).lstrip("/")

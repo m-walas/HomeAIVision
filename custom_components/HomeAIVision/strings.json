@@ -34,7 +34,7 @@
         "data": {
           "max_images": "Set the maximum number of images to store per day or in total.",
           "days_to_keep": "Specify how many days to keep the images if organized by day.",
-          "notification_language": "Select the language for notifications."
+          "language": "Select the language for the integration."
         }
       }
     },

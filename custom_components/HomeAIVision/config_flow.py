@@ -1,13 +1,13 @@
 import logging
 import uuid
-import aiohttp
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+import aiohttp # type: ignore
+import voluptuous as vol # type: ignore 
+import homeassistant.helpers.config_validation as cv # type: ignore
+
+from homeassistant import config_entries # type: ignore
+from homeassistant.core import callback # type: ignore 
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry # type: ignore
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry # type: ignore
 
 from .const import (
     DOMAIN,
@@ -19,7 +19,7 @@ from .const import (
     CONF_ORGANIZE_BY_DAY,
     CONF_DAYS_TO_KEEP,
     CONF_SEND_NOTIFICATIONS,
-    CONF_NOTIFICATION_LANGUAGE,
+    CONF_LANGUAGE,
     CONF_TO_DETECT_OBJECT,
     CONF_CONFIDENCE_THRESHOLD,
     CONF_INTEGRATION_TITLE,
@@ -72,8 +72,12 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_AZURE_API_KEY: self.temp_config[CONF_AZURE_API_KEY],
                         CONF_AZURE_ENDPOINT: self.temp_config[CONF_AZURE_ENDPOINT],
+                        CONF_LANGUAGE: self.temp_config.get(CONF_LANGUAGE, "en"),
                         "devices": {},
-                        "global": {"global_azure_request_count": 0},
+                        "global": {
+                            "global_azure_request_count": 0,
+                            "language": self.temp_config.get(CONF_LANGUAGE, "en"),
+                        },
                     }
                 )
 
@@ -82,6 +86,13 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({
                 vol.Required(CONF_AZURE_API_KEY): str,
                 vol.Required(CONF_AZURE_ENDPOINT): str,
+                vol.Required(CONF_LANGUAGE, default="en"): vol.In({
+                    "en": "English",
+                    "pl": "Polski",
+                    "es": "Español",
+                    "fr": "Français",
+                    "de": "Deutsch",
+                }),
             }),
             errors=errors,
         )

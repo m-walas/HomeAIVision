@@ -10,44 +10,94 @@
       },
       "azure_conf": {
         "title": "Azure Setup",
-        "description": "Provide your camera setup details.",
+        "description": "Provide your Azure credentials.",
         "data": {
-          "azure_api_key": "Azure API Key.",
-          "azure_endpoint": "Azure Endpoint URL.",
-          "cam_url": "URL to your camera feed.",
-          "time_between_requests": "Set the time interval (in seconds) between requests.",
-          "send_notifications": "Toggle sending notifications on detection.",
-          "organize_by_day": "Enable or disable organizing images by day.",
-          "confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "azure_api_key": "Azure API Key",
+          "azure_endpoint": "Azure Endpoint URL",
+          "language": "Select the language for the integration."
+        }
+      }
+    },
+    "error": {
+      "azure_credentials_invalid": "Your Azure credentials are invalid. Please check your API key and endpoint URL."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HomeAIVision Options",
+        "description": "Choose an action to perform.",
+        "data": {
+          "action": "Select Action"
+        }
+      },
+      "add_camera": {
+        "title": "Add New Camera",
+        "description": "Configure the new camera settings.",
+        "data": {
+          "name": "Camera Name",
+          "cam_url": "Camera URL",
           "to_detect_object": {
             "description": "Choose which objects to detect. Ensure at least one is selected.",
             "person": "Person",
             "car": "Car",
             "cat": "Cat",
             "dog": "Dog"
-          }
+          },
+          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "motion_detection_threshold": "Set the motion detection threshold.",
+          "motion_detection_frame_skip": "Set the frame skip for motion detection.",
+          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks.",
+          "send_notifications": "Send Notifications",
+          "organize_by_day": "Organize Images by Day",
+          "max_images": "Maximum Number of Images",
+          "days_to_keep": "Days to Keep Images"
         }
       },
-      "additional_options": {
-        "title": "Additional Settings",
-        "description": "Configure additional options for image storage and notifications.",
+      "edit_camera": {
+        "title": "Edit Camera",
+        "description": "Update the camera settings.",
         "data": {
-          "max_images": "Set the maximum number of images to store per day or in total.",
-          "days_to_keep": "Specify how many days to keep the images if organized by day.",
-          "language": "Select the language for the integration."
+          "name": "Camera Name",
+          "cam_url": "Camera URL",
+          "to_detect_object": {
+            "description": "Choose which objects to detect. Ensure at least one is selected.",
+            "person": "Person",
+            "car": "Car",
+            "cat": "Cat",
+            "dog": "Dog"
+          },
+          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "motion_detection_threshold": "Set the motion detection threshold.",
+          "motion_detection_frame_skip": "Set the frame skip for motion detection.",
+          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks.",
+          "send_notifications": "Send Notifications",
+          "organize_by_day": "Organize Images by Day",
+          "max_images": "Maximum Number of Images",
+          "days_to_keep": "Days to Keep Images"
+        }
+      },
+      "remove_device": {
+        "title": "Remove Camera",
+        "description": "Select a camera to remove.",
+        "data": {
+          "device": "Select Camera"
         }
       }
     },
     "error": {
-      "azure_credentials_invalid": "Your Azure credentials are invalid. Please check your API key and endpoint URL.",
       "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://.",
-      "at_least_one_object_must_be_selected": "At least one object from the list must be selected."
+      "device_not_found": "The selected device was not found.",
+      "remove_failed": "Failed to remove the device."
     }
   },
   "message": {
     "person_detected": "Person detected!",
     "car_detected": "Car detected!",
     "cat_detected": "Cat detected!",
-    "dog_detected": "Dog detected!"
+    "dog_detected": "Dog detected!",
+    "new_camera_added": "New camera added.",
+    "camera_updated": "Camera updated.",
+    "camera_removed": "Camera removed."
   }
 }

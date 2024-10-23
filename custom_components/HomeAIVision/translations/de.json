@@ -1,0 +1,125 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HomeAIVision Konfiguration",
+        "description": "Geben Sie einen eigenen Namen für die Integration ein.",
+        "data": {
+          "integration_title": "Name"
+        }
+      },
+      "azure_conf": {
+        "title": "Azure Konfiguration",
+        "description": "Geben Sie Ihre Azure-Anmeldedaten ein.",
+        "data": {
+          "azure_api_key": "Azure API-Schlüssel",
+          "azure_endpoint": "Azure Endpoint-URL",
+          "cam_url": "URL des Kamerastreams",
+          "time_between_requests": "Stellen Sie das Zeitintervall (in Sekunden) zwischen Anfragen ein.",
+          "send_notifications": "Benachrichtigungen bei Erkennung senden",
+          "organize_by_day": "Bilder nach Tagen organisieren",
+          "azure_confidence_threshold": "Stellen Sie die minimale Konfidenzschwelle für die Objekterkennung ein.",
+          "to_detect_object": {
+            "description": "Wählen Sie die zu erkennenden Objekte aus. Stellen Sie sicher, dass mindestens eines ausgewählt ist.",
+            "person": "Person",
+            "car": "Auto",
+            "cat": "Katze",
+            "dog": "Hund"
+          }
+        }
+      },
+      "additional_options": {
+        "title": "Zusätzliche Einstellungen",
+        "description": "Konfigurieren Sie zusätzliche Optionen für die Bildspeicherung und Benachrichtigungen.",
+        "data": {
+          "max_images": "Legen Sie die maximale Anzahl der pro Tag oder insgesamt zu speichernden Bilder fest.",
+          "days_to_keep": "Geben Sie an, wie viele Tage die Bilder aufbewahrt werden sollen, wenn sie nach Tagen organisiert sind.",
+          "language": "Wählen Sie die Sprache für die Integration."
+        }
+      }
+    },
+    "error": {
+      "azure_credentials_invalid": "Ihre Azure-Anmeldedaten sind ungültig. Bitte überprüfen Sie Ihren API-Schlüssel und die Endpoint-URL.",
+      "camera_url_invalid": "Die Kamera-URL ist ungültig. Sie sollte mit http:// oder https:// beginnen.",
+      "at_least_one_object_must_be_selected": "Mindestens ein Objekt aus der Liste muss ausgewählt werden."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HomeAIVision Optionen",
+        "description": "Wählen Sie eine Aktion zur Ausführung.",
+        "data": {
+          "action": "Aktion auswählen"
+        }
+      },
+      "add_camera": {
+        "title": "Neue Kamera hinzufügen",
+        "description": "Konfigurieren Sie die Einstellungen der neuen Kamera.",
+        "data": {
+          "name": "Kameraname",
+          "cam_url": "Kamera-URL",
+          "to_detect_object": {
+            "description": "Wählen Sie die zu erkennenden Objekte aus. Stellen Sie sicher, dass mindestens eines ausgewählt ist.",
+            "person": "Person",
+            "car": "Auto",
+            "cat": "Katze",
+            "dog": "Hund"
+          },
+          "azure_confidence_threshold": "Stellen Sie die minimale Konfidenzschwelle für die Objekterkennung ein",
+          "motion_detection_threshold": "Stellen Sie die Schwelle für die Bewegungserkennung ein",
+          "motion_detection_frame_skip": "Stellen Sie das Überspringen von Frames für die Bewegungserkennung ein",
+          "motion_detection_interval": "Stellen Sie das Intervall (in Sekunden) zwischen den Bewegungserkennungskontrollen ein",
+          "send_notifications": "Benachrichtigungen senden",
+          "organize_by_day": "Bilder nach Tagen organisieren",
+          "max_images": "Maximale Anzahl von Bildern",
+          "days_to_keep": "Tage zur Aufbewahrung von Bildern"
+        }
+      },
+      "edit_camera": {
+        "title": "Kamera bearbeiten",
+        "description": "Aktualisieren Sie die Kameraeinstellungen.",
+        "data": {
+          "name": "Kameraname",
+          "cam_url": "Kamera-URL",
+          "to_detect_object": {
+            "description": "Wählen Sie die zu erkennenden Objekte aus. Stellen Sie sicher, dass mindestens eines ausgewählt ist.",
+            "person": "Person",
+            "car": "Auto",
+            "cat": "Katze",
+            "dog": "Hund"
+          },
+          "azure_confidence_threshold": "Stellen Sie die minimale Konfidenzschwelle für die Objekterkennung ein",
+          "motion_detection_threshold": "Stellen Sie die Schwelle für die Bewegungserkennung ein",
+          "motion_detection_frame_skip": "Stellen Sie das Überspringen von Frames für die Bewegungserkennung ein",
+          "motion_detection_interval": "Stellen Sie das Intervall (in Sekunden) zwischen den Bewegungserkennungskontrollen ein",
+          "send_notifications": "Benachrichtigungen senden",
+          "organize_by_day": "Bilder nach Tagen organisieren",
+          "max_images": "Maximale Anzahl von Bildern",
+          "days_to_keep": "Tage zur Aufbewahrung von Bildern"
+        }
+      },
+      "remove_device": {
+        "title": "Kamera entfernen",
+        "description": "Wählen Sie eine Kamera zum Entfernen aus.",
+        "data": {
+          "device": "Kamera auswählen"
+        }
+      }
+    },
+    "error": {
+      "camera_url_invalid": "Die Kamera-URL ist ungültig. Sie sollte mit http:// oder https:// beginnen.",
+      "device_not_found": "Das ausgewählte Gerät wurde nicht gefunden.",
+      "remove_failed": "Das Entfernen des Geräts ist fehlgeschlagen."
+    }
+  },
+  "message": {
+    "person_detected": "Person erkannt!",
+    "car_detected": "Auto erkannt!",
+    "cat_detected": "Katze erkannt!",
+    "dog_detected": "Hund erkannt!",
+    "new_camera_added": "Neue Kamera hinzugefügt.",
+    "camera_updated": "Kamera aktualisiert.",
+    "camera_removed": "Kamera entfernt."
+  }
+}

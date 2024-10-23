@@ -15,14 +15,16 @@ from .const import (
     CONF_AZURE_ENDPOINT,
     CONF_CAM_URL,
     CONF_MAX_IMAGES,
-    CONF_TIME_BETWEEN_REQUESTS,
     CONF_ORGANIZE_BY_DAY,
     CONF_DAYS_TO_KEEP,
     CONF_SEND_NOTIFICATIONS,
     CONF_LANGUAGE,
     CONF_TO_DETECT_OBJECT,
-    CONF_CONFIDENCE_THRESHOLD,
+    CONF_AZURE_CONFIDENCE_THRESHOLD,
     CONF_INTEGRATION_TITLE,
+    CONF_MOTION_DETECTION_THRESHOLD,
+    CONF_MOTION_DETECTION_FRAME_SKIP,
+    CONF_MOTION_DETECTION_INTERVAL,
 )
 
 from .store import HomeAIVisionStore, DeviceData
@@ -143,11 +145,14 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     name=user_input.get("name", "Camera"),
                     url=user_input[CONF_CAM_URL],
                     to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
-                    confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
+                    azure_confidence_threshold=user_input[CONF_AZURE_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, False),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, True),
                     max_images=user_input.get(CONF_MAX_IMAGES, 30),
-                    time_between_requests=user_input.get(CONF_TIME_BETWEEN_REQUESTS, 30),
+                    days_to_keep=user_input.get(CONF_DAYS_TO_KEEP, 7),
+                    motion_detection_threshold=user_input.get(CONF_MOTION_DETECTION_THRESHOLD, 10000),
+                    motion_detection_frame_skip=user_input.get(CONF_MOTION_DETECTION_FRAME_SKIP, 2),
+                    motion_detection_interval=user_input.get(CONF_MOTION_DETECTION_INTERVAL, 3),
                 )
 
                 _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
@@ -166,12 +171,14 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(CONF_TO_DETECT_OBJECT, default='person'): vol.In({
                     'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
                 }),
-                vol.Required(CONF_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Optional(CONF_MOTION_DETECTION_THRESHOLD, default=10000): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
+                vol.Optional(CONF_MOTION_DETECTION_FRAME_SKIP, default=2): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=3): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
-                vol.Optional(CONF_MAX_IMAGES, default=30): int,
-                vol.Optional(CONF_TIME_BETWEEN_REQUESTS, default=30): int,
-                vol.Optional(CONF_DAYS_TO_KEEP, default=7): int,
+                vol.Optional(CONF_MAX_IMAGES, default=30): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_DAYS_TO_KEEP, default=7): vol.All(vol.Coerce(int), vol.Range(min=1)),
             }),
             errors=errors,
         )
@@ -210,11 +217,14 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     name=user_input.get("name", device.name),
                     url=user_input[CONF_CAM_URL],
                     to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
-                    confidence_threshold=user_input[CONF_CONFIDENCE_THRESHOLD],
+                    azure_confidence_threshold=user_input[CONF_AZURE_CONFIDENCE_THRESHOLD],
                     send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
                     organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
                     max_images=user_input.get(CONF_MAX_IMAGES, device.max_images),
-                    time_between_requests=user_input.get(CONF_TIME_BETWEEN_REQUESTS, device.time_between_requests),
+                    days_to_keep=user_input.get(CONF_DAYS_TO_KEEP, device.days_to_keep),
+                    motion_detection_threshold=user_input.get(CONF_MOTION_DETECTION_THRESHOLD, device.motion_detection_threshold),
+                    motion_detection_frame_skip=user_input.get(CONF_MOTION_DETECTION_FRAME_SKIP, device.motion_detection_frame_skip),
+                    motion_detection_interval=user_input.get(CONF_MOTION_DETECTION_INTERVAL, device.motion_detection_interval),
                 )
 
                 await self.store.async_update_device(self.device_id, updated_device)
@@ -234,12 +244,14 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(CONF_TO_DETECT_OBJECT, default=device.to_detect_object): vol.In({
                     'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
                 }),
-                vol.Required(CONF_CONFIDENCE_THRESHOLD, default=device.confidence_threshold): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=device.azure_confidence_threshold): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Optional(CONF_MOTION_DETECTION_THRESHOLD, default=device.motion_detection_threshold): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
+                vol.Optional(CONF_MOTION_DETECTION_FRAME_SKIP, default=device.motion_detection_frame_skip): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=device.motion_detection_interval): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=device.send_notifications): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=device.organize_by_day): bool,
-                vol.Optional(CONF_MAX_IMAGES, default=device.max_images): int,
-                vol.Optional(CONF_TIME_BETWEEN_REQUESTS, default=device.time_between_requests): int,
-                vol.Optional(CONF_DAYS_TO_KEEP, default=device.days_to_keep): int,
+                vol.Optional(CONF_MAX_IMAGES, default=device.max_images): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_DAYS_TO_KEEP, default=device.days_to_keep): vol.All(vol.Coerce(int), vol.Range(min=1)),
             }),
             errors=errors,
         )

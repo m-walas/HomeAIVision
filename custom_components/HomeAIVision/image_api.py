@@ -120,7 +120,7 @@ class ConfigDataView(HomeAssistantView):
             "send_notifications": config.get("send_notifications", False),
             "language": config.get("language", "en"),
             "to_detect_object": config.get("to_detect_object", "person"),
-            "confidence_threshold": config.get("confidence_threshold", 0.6),
+            "azure_confidence_threshold": config.get("azure_confidence_threshold", 0.6),
             "integration_title": config.get("integration_title", "Home AI Vision"),
         }
 

@@ -14,16 +14,7 @@
         "data": {
           "azure_api_key": "Azure API-Schlüssel",
           "azure_endpoint": "Azure Endpunkt-URL",
-          "language": {
-            "description": "Wählen Sie die Sprache für die Integration.",
-            "options": {
-              "en": "Englisch",
-              "pl": "Polnisch",
-              "es": "Spanisch",
-              "fr": "Französisch",
-              "de": "Deutsch"
-            }
-          }
+          "language": "Wählen Sie die Sprache für die Integration."
         }
       }
     },
@@ -37,14 +28,7 @@
         "title": "HomeAIVision Optionen",
         "description": "Wählen Sie eine Aktion aus.",
         "data": {
-          "action": {
-            "description": "Wählen Sie eine Aktion aus.",
-            "options": {
-              "add_device": "Neue Kamera hinzufügen",
-              "edit_device": "Bestehende Kamera bearbeiten",
-              "remove_device": "Kamera entfernen"
-            }
-          }
+          "action": "Wählen Sie eine Aktion aus."
         }
       },
       "add_camera": {
@@ -63,15 +47,7 @@
         "title": "Erkennungseinstellungen",
         "description": "Konfigurieren Sie die Erkennungseinstellungen. Erweiterte Einstellungen sind vorkonfiguriert; ändern Sie sie nur bei Bedarf.",
         "data": {
-          "to_detect_object": {
-            "description": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
-            "options": {
-              "person": "Person",
-              "car": "Auto",
-              "cat": "Katze",
-              "dog": "Hund"
-            }
-          },
+          "to_detect_object": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
           "azure_confidence_threshold": "Legen Sie den minimalen Konfidenzschwellenwert für die Objekterkennung fest.",
           "motion_detection_min_area": "Stellen Sie den minimalen Bewegungsmessbereich ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
           "motion_detection_history_size": "Stellen Sie die Größe des Bewegungserkennungsspeichers ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
@@ -94,15 +70,7 @@
         "title": "Erkennungseinstellungen",
         "description": "Aktualisieren Sie die Erkennungseinstellungen. Erweiterte Einstellungen sind vorkonfiguriert; ändern Sie sie nur bei Bedarf.",
         "data": {
-          "to_detect_object": {
-            "description": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
-            "options": {
-              "person": "Person",
-              "car": "Auto",
-              "cat": "Katze",
-              "dog": "Hund"
-            }
-          },
+          "to_detect_object": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
           "azure_confidence_threshold": "Legen Sie den minimalen Konfidenzschwellenwert für die Objekterkennung fest.",
           "motion_detection_min_area": "Stellen Sie den minimalen Bewegungsmessbereich ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
           "motion_detection_history_size": "Stellen Sie die Größe des Bewegungserkennungsspeichers ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
@@ -140,5 +108,32 @@
     "camera_updated": "Kamera aktualisiert.",
     "camera_removed": "Kamera entfernt.",
     "unknown_object_detected": "Unbekanntes Objekt mehrfach ohne Erkennung entdeckt. Bitte überprüfen Sie die Kamera manuell."
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "en": "Englisch",
+        "pl": "Polnisch",
+        "es": "Spanisch",
+        "fr": "Französisch",
+        "de": "Deutsch"
+      }
+    },
+    "actions": {
+      "options": {
+        "add_device": "Neue Kamera hinzufügen",
+        "edit_device": "Bestehende Kamera bearbeiten",
+        "remove_device": "Kamera entfernen"
+      }
+    },
+    "to_detect_object": {
+      "options": {
+        "person": "Person",
+        "car": "Auto",
+        "cat": "Katze",
+        "dog": "Hund",
+        "unknown": "Unbekannt"
+      }
+    }
   }
 }

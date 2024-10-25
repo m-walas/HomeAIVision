@@ -14,16 +14,7 @@
         "data": {
           "azure_api_key": "Clave API de Azure",
           "azure_endpoint": "URL del endpoint de Azure",
-          "language": {
-            "description": "Seleccione el idioma para la integración.",
-            "options": {
-              "en": "Inglés",
-              "pl": "Polaco",
-              "es": "Español",
-              "fr": "Francés",
-              "de": "Alemán"
-            }
-          }
+          "language": "Seleccione el idioma para la integración."
         }
       }
     },
@@ -37,14 +28,7 @@
         "title": "Opciones de HomeAIVision",
         "description": "Elija una acción a realizar.",
         "data": {
-          "action": {
-            "description": "Seleccione una acción a realizar.",
-            "options": {
-              "add_device": "Agregar nueva cámara",
-              "edit_device": "Editar cámara existente",
-              "remove_device": "Eliminar cámara"
-            }
-          }
+          "action": "Seleccione una acción a realizar."
         }
       },
       "add_camera": {
@@ -63,15 +47,7 @@
         "title": "Ajustes de detección",
         "description": "Configure los ajustes de detección. Los ajustes avanzados están preconfigurados; cámbielos solo si es necesario.",
         "data": {
-          "to_detect_object": {
-            "description": "Elija qué objetos detectar.",
-            "options": {
-              "person": "Persona",
-              "car": "Coche",
-              "cat": "Gato",
-              "dog": "Perro"
-            }
-          },
+          "to_detect_object": "Elija qué objetos detectar.",
           "azure_confidence_threshold": "Establezca el umbral mínimo de confianza para la detección de objetos.",
           "motion_detection_min_area": "Establezca el área mínima de detección de movimiento. Ajuste avanzado; cámbielo solo si es necesario.",
           "motion_detection_history_size": "Establezca el tamaño del historial de detección de movimiento. Ajuste avanzado; cámbielo solo si es necesario.",
@@ -94,15 +70,7 @@
         "title": "Ajustes de detección",
         "description": "Actualice los ajustes de detección. Los ajustes avanzados están preconfigurados; cámbielos solo si es necesario.",
         "data": {
-          "to_detect_object": {
-            "description": "Elija qué objetos detectar.",
-            "options": {
-              "person": "Persona",
-              "car": "Coche",
-              "cat": "Gato",
-              "dog": "Perro"
-            }
-          },
+          "to_detect_object": "Elija qué objetos detectar.",
           "azure_confidence_threshold": "Establezca el umbral mínimo de confianza para la detección de objetos.",
           "motion_detection_min_area": "Establezca el área mínima de detección de movimiento. Ajuste avanzado; cámbielo solo si es necesario.",
           "motion_detection_history_size": "Establezca el tamaño del historial de detección de movimiento. Ajuste avanzado; cámbielo solo si es necesario.",
@@ -140,5 +108,32 @@
     "camera_updated": "Cámara actualizada.",
     "camera_removed": "Cámara eliminada.",
     "unknown_object_detected": "Se ha detectado un objeto desconocido varias veces sin reconocimiento. Por favor, verifique la cámara manualmente."
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "en": "Inglés",
+        "pl": "Polaco",
+        "es": "Español",
+        "fr": "Francés",
+        "de": "Alemán"
+      }
+    },
+    "action": {
+      "options": {
+        "add_device": "Agregar nueva cámara",
+        "edit_device": "Editar cámara existente",
+        "remove_device": "Eliminar cámara"
+      }
+    },
+    "to_detect_object": {
+      "options": {
+        "person": "Persona",
+        "car": "Coche",
+        "cat": "Gato",
+        "dog": "Perro",
+        "unknown": "Desconocido"
+      }
+    }
   }
 }

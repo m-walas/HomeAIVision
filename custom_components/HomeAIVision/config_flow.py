@@ -8,6 +8,7 @@ from homeassistant import config_entries # type: ignore
 from homeassistant.core import callback # type: ignore 
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry # type: ignore
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry # type: ignore
+from homeassistant.helpers.selector import selector  # type: ignore
 
 from .const import (
     DOMAIN,
@@ -88,15 +89,12 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({
                 vol.Required(CONF_AZURE_API_KEY): str,
                 vol.Required(CONF_AZURE_ENDPOINT): str,
-                vol.Required(CONF_LANGUAGE, default="en"): vol.In(
-                    {
-                        "en": "English",
-                        "pl": "Polski",
-                        "es": "Español",
-                        "fr": "Français",
-                        "de": "Deutsch",
+                vol.Required(CONF_LANGUAGE, default="en"): selector({
+                    "select": {
+                        "options": ["en", "pl", "es", "fr", "de"],
+                        "translation_key": "language",
                     }
-                ),
+                }),
             }),
             errors=errors,
         )
@@ -120,10 +118,11 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema({
-                    vol.Required("action"): vol.In({
-                        "add_device": "Add New Camera",
-                        "edit_device": "Edit Existing Camera",
-                        "remove_device": "Remove Camera",
+                    vol.Required("action"): selector({
+                        "select": {
+                            "options": ["add_device", "edit_device", "remove_device"],
+                            "translation_key": "action",
+                        }
                     }),
                 }),
             )
@@ -200,14 +199,12 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="add_camera_detection",
             data_schema=vol.Schema({
-                vol.Required(CONF_TO_DETECT_OBJECT, default="person"): vol.In(
-                    {
-                        "person": "Person",
-                        "car": "Car",
-                        "cat": "Cat",
-                        "dog": "Dog",
+                vol.Required(CONF_TO_DETECT_OBJECT, default="person"): selector({
+                    "select": {
+                        "options": ["person", "car", "cat", "dog"],
+                        "translation_key": "to_detect_object",
                     }
-                ),
+                }),
                 vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
                 vol.Optional(CONF_MOTION_DETECTION_MIN_AREA, default=6000): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 vol.Optional(CONF_MOTION_DETECTION_HISTORY_SIZE, default=10): vol.All(vol.Coerce(int), vol.Range(min=2)),
@@ -310,13 +307,12 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_TO_DETECT_OBJECT, 
                     default=device.to_detect_object
-                    ): vol.In(
-                        {
-                            "person": "Person",
-                            "car": "Car",
-                            "cat": "Cat",
-                            "dog": "Dog",
-                        }),
+                    ): selector({
+                        "select": {
+                            "options": ["person", "car", "cat", "dog"],
+                            "translation_key": "to_detect_object",
+                        }
+                    }),
                 vol.Required(
                     CONF_AZURE_CONFIDENCE_THRESHOLD,
                     default=device.azure_confidence_threshold,

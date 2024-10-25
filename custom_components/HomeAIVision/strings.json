@@ -14,16 +14,7 @@
         "data": {
           "azure_api_key": "Azure API Key",
           "azure_endpoint": "Azure Endpoint URL",
-          "language": {
-            "description": "Select the language for the integration.",
-            "options": {
-              "en": "English",
-              "pl": "Polish",
-              "es": "Spanish",
-              "fr": "French",
-              "de": "German"
-            }
-          }
+          "language": "Select the language for the integration."
         }
       }
     },
@@ -37,14 +28,7 @@
         "title": "HomeAIVision Options",
         "description": "Choose an action to perform.",
         "data": {
-          "action": {
-            "description": "Select an action to perform.",
-            "options": {
-              "add_device": "Add New Camera",
-              "edit_device": "Edit Existing Camera",
-              "remove_device": "Remove Camera"
-            }
-          }
+          "action": "Select an action to perform."
         }
       },
       "add_camera": {
@@ -63,15 +47,7 @@
         "title": "Detection Settings",
         "description": "Configure detection settings. Advanced settings are pre-configured; change them only if necessary.",
         "data": {
-          "to_detect_object": {
-            "description": "Choose which object to detect.",
-            "options": {
-              "person": "Person",
-              "car": "Car",
-              "cat": "Cat",
-              "dog": "Dog"
-            }
-          },
+          "to_detect_object": "Choose which object to detect.",
           "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
           "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
           "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
@@ -94,15 +70,7 @@
         "title": "Detection Settings",
         "description": "Update detection settings. Advanced settings are pre-configured; change them only if necessary.",
         "data": {
-          "to_detect_object": {
-            "description": "Choose which objects to detect.",
-            "options": {
-              "person": "Person",
-              "car": "Car",
-              "cat": "Cat",
-              "dog": "Dog"
-            }
-          },
+          "to_detect_object": "Choose which objects to detect.",
           "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
           "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
           "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
@@ -140,5 +108,32 @@
     "camera_updated": "Camera updated.",
     "camera_removed": "Camera removed.",
     "unknown_object_detected": "Detected unknown object multiple times without recognition. Please check the camera manually."
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "en": "English",
+        "pl": "Polish",
+        "es": "Spanish",
+        "fr": "French",
+        "de": "German"
+      }
+    },
+    "action": {
+      "options": {
+        "add_device": "Add New Camera",
+        "edit_device": "Edit Existing Camera",
+        "remove_device": "Remove Camera"
+      }
+    },
+    "to_detect_object": {
+      "options": {
+        "person": "Person",
+        "car": "Car",
+        "cat": "Cat",
+        "dog": "Dog",
+        "unknown": "Unknown"
+      }
+    }
   }
 }

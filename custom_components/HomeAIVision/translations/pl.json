@@ -14,16 +14,7 @@
         "data": {
           "azure_api_key": "Klucz API Azure",
           "azure_endpoint": "Adres URL punktu końcowego Azure",
-          "language": {
-            "description": "Wybierz język dla integracji.",
-            "options": {
-              "en": "Angielski",
-              "pl": "Polski",
-              "es": "Hiszpański",
-              "fr": "Francuski",
-              "de": "Niemiecki"
-            }
-          }
+          "language": "Wybierz język dla integracji."
         }
       }
     },
@@ -37,14 +28,7 @@
         "title": "Opcje HomeAIVision",
         "description": "Wybierz akcję do wykonania.",
         "data": {
-          "action": {
-            "description": "Wybierz akcję do wykonania.",
-            "options": {
-              "add_device": "Dodaj nową kamerę",
-              "edit_device": "Edytuj istniejącą kamerę",
-              "remove_device": "Usuń kamerę"
-            }
-          }
+          "action": "Wybierz akcję do wykonania."
         }
       },
       "add_camera": {
@@ -63,15 +47,7 @@
         "title": "Ustawienia wykrywania",
         "description": "Skonfiguruj ustawienia wykrywania. Zaawansowane ustawienia są wstępnie skonfigurowane; zmieniaj je tylko jeśli to konieczne.",
         "data": {
-          "to_detect_object": {
-            "description": "Wybierz, który obiekt wykrywać.",
-            "options": {
-              "person": "Osoba",
-              "car": "Samochód",
-              "cat": "Kot",
-              "dog": "Pies"
-            }
-          },
+          "to_detect_object": "Wybierz obiekt do wykrycia.",
           "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
           "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
           "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
@@ -94,15 +70,7 @@
         "title": "Ustawienia wykrywania",
         "description": "Zaktualizuj ustawienia wykrywania. Zaawansowane ustawienia są wstępnie skonfigurowane; zmieniaj je tylko jeśli to konieczne.",
         "data": {
-          "to_detect_object": {
-            "description": "Wybierz, które obiekty wykrywać.",
-            "options": {
-              "person": "Osoba",
-              "car": "Samochód",
-              "cat": "Kot",
-              "dog": "Pies"
-            }
-          },
+          "to_detect_object": "Wybierz, który obiekt wykrywać.",
           "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
           "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
           "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
@@ -140,5 +108,32 @@
     "camera_updated": "Kamera została zaktualizowana.",
     "camera_removed": "Kamera została usunięta.",
     "unknown_object_detected": "Wykryto nieznany obiekt wielokrotnie bez rozpoznania. Proszę ręcznie sprawdzić kamerę."
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "en": "Angielski",
+        "pl": "Polski",
+        "es": "Hiszpański",
+        "fr": "Francuski",
+        "de": "Niemiecki"
+      }
+    },
+    "action": {
+      "options": {
+        "add_device": "Dodaj nową kamerę",
+        "edit_device": "Edytuj istniejącą kamerę",
+        "remove_device": "Usuń kamerę"
+      }
+    },
+    "to_detect_object": {
+      "options": {
+        "person": "Osoba",
+        "car": "Samochód",
+        "cat": "Kot",
+        "dog": "Pies",
+        "unknown": "Nieznany"
+      }
+    }
   }
 }

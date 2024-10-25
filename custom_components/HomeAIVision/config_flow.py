@@ -22,8 +22,8 @@ from .const import (
     CONF_TO_DETECT_OBJECT,
     CONF_AZURE_CONFIDENCE_THRESHOLD,
     CONF_INTEGRATION_TITLE,
-    CONF_MOTION_DETECTION_THRESHOLD,
-    CONF_MOTION_DETECTION_FRAME_SKIP,
+    CONF_MOTION_DETECTION_MIN_AREA,
+    CONF_MOTION_DETECTION_HISTORY_SIZE,
     CONF_MOTION_DETECTION_INTERVAL,
 )
 
@@ -88,13 +88,15 @@ class HomeAIVisionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({
                 vol.Required(CONF_AZURE_API_KEY): str,
                 vol.Required(CONF_AZURE_ENDPOINT): str,
-                vol.Required(CONF_LANGUAGE, default="en"): vol.In({
-                    "en": "English",
-                    "pl": "Polski",
-                    "es": "Español",
-                    "fr": "Français",
-                    "de": "Deutsch",
-                }),
+                vol.Required(CONF_LANGUAGE, default="en"): vol.In(
+                    {
+                        "en": "English",
+                        "pl": "Polski",
+                        "es": "Español",
+                        "fr": "Français",
+                        "de": "Deutsch",
+                    }
+                ),
             }),
             errors=errors,
         )
@@ -110,6 +112,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.device_id = None
         self.remove = False
+        self.camera_data = {} # info: temporary storage for camera data across steps
 
     async def async_step_init(self, user_input=None):
         self.store : HomeAIVisionStore = self.hass.data[DOMAIN]['store']
@@ -139,47 +142,80 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
             else:
-                device_id = str(uuid.uuid4())
-                new_device = DeviceData(
-                    id=device_id,
-                    name=user_input.get("name", "Camera"),
-                    url=user_input[CONF_CAM_URL],
-                    to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
-                    azure_confidence_threshold=user_input[CONF_AZURE_CONFIDENCE_THRESHOLD],
-                    send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, False),
-                    organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, True),
-                    max_images=user_input.get(CONF_MAX_IMAGES, 30),
-                    days_to_keep=user_input.get(CONF_DAYS_TO_KEEP, 7),
-                    motion_detection_threshold=user_input.get(CONF_MOTION_DETECTION_THRESHOLD, 10000),
-                    motion_detection_frame_skip=user_input.get(CONF_MOTION_DETECTION_FRAME_SKIP, 2),
-                    motion_detection_interval=user_input.get(CONF_MOTION_DETECTION_INTERVAL, 3),
-                )
-
-                _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
-
-                await self.store.async_add_device(new_device)
-
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-                return self.async_create_entry(title="New Camera Added", data={})
-
+                # info: store the camera data and proceed to the next step
+                self.camera_data.update(user_input)
+                return await self.async_step_add_camera_detection()
+            
         return self.async_show_form(
             step_id="add_camera",
             data_schema=vol.Schema({
                 vol.Required("name", default="Camera"): str,
                 vol.Required(CONF_CAM_URL): str,
-                vol.Required(CONF_TO_DETECT_OBJECT, default='person'): vol.In({
-                    'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
-                }),
-                vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
-                vol.Optional(CONF_MOTION_DETECTION_THRESHOLD, default=10000): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
-                vol.Optional(CONF_MOTION_DETECTION_FRAME_SKIP, default=2): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=3): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
-                vol.Optional(CONF_MAX_IMAGES, default=30): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                vol.Optional(CONF_DAYS_TO_KEEP, default=7): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_MAX_IMAGES, default=30): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(CONF_DAYS_TO_KEEP, default=7): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
             }),
+            description_placeholders={
+                "camera_settings": "Configure your camera's basic settings."
+            },
+            errors=errors,
+        )
+
+    async def async_step_add_camera_detection(self, user_input=None):
+        """Second step for adding a camera: Detection settings."""
+        errors = {}
+        if user_input is not None:
+            # info: Combine the detection settings with the previous camera settings
+            self.camera_data.update(user_input)
+            # info: All data collected, proceed to the next step
+            device_id = str(uuid.uuid4())
+            new_device = DeviceData(
+                id=device_id,
+                name=self.camera_data.get("name", "Camera"),
+                url=self.camera_data[CONF_CAM_URL],
+                to_detect_object=self.camera_data[CONF_TO_DETECT_OBJECT],
+                azure_confidence_threshold=self.camera_data[CONF_AZURE_CONFIDENCE_THRESHOLD],
+                send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, False),
+                organize_by_day=self.camera_data.get(CONF_ORGANIZE_BY_DAY, True),
+                max_images=self.camera_data.get(CONF_MAX_IMAGES, 30),
+                days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, 7),
+                motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, 6000),
+                motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, 10),
+                motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 1),
+            )
+
+            _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
+
+            await self.store.async_add_device(new_device)
+
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+            return self.async_create_entry(title="New Camera Added", data={})
+        
+        return self.async_show_form(
+            step_id="add_camera_detection",
+            data_schema=vol.Schema({
+                vol.Required(CONF_TO_DETECT_OBJECT, default="person"): vol.In(
+                    {
+                        "person": "Person",
+                        "car": "Car",
+                        "cat": "Cat",
+                        "dog": "Dog",
+                    }
+                ),
+                vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Optional(CONF_MOTION_DETECTION_MIN_AREA, default=6000): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional(CONF_MOTION_DETECTION_HISTORY_SIZE, default=10): vol.All(vol.Coerce(int), vol.Range(min=2)),
+                vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=5): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
+            }),
+            description_placeholders={
+                "detection_settings": "Configure detection settings. Advanced settings are pre-configured; change them only if necessary."
+            },
             errors=errors,
         )
 
@@ -187,7 +223,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
         devices = self.store.get_devices()
         if not devices:
             return self.async_abort(reason="no_devices")
-
+        
         device_options = {dev_id: dev_conf.name for dev_id, dev_conf in devices.items()}
 
         if user_input is None:
@@ -197,7 +233,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     vol.Required("device"): vol.In(device_options),
                 }),
             )
-
+        
         self.device_id = user_input["device"]
         if self.remove:
             return await self.async_step_remove_device()
@@ -205,6 +241,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_edit_camera()
 
     async def async_step_edit_camera(self, user_input=None):
+        """First step for editing a camera: Camera settings."""
         device = self.store.get_device(self.device_id)
 
         errors = {}
@@ -212,47 +249,94 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
             else:
-                updated_device = DeviceData(
-                    id=device.id,
-                    name=user_input.get("name", device.name),
-                    url=user_input[CONF_CAM_URL],
-                    to_detect_object=user_input[CONF_TO_DETECT_OBJECT],
-                    azure_confidence_threshold=user_input[CONF_AZURE_CONFIDENCE_THRESHOLD],
-                    send_notifications=user_input.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
-                    organize_by_day=user_input.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
-                    max_images=user_input.get(CONF_MAX_IMAGES, device.max_images),
-                    days_to_keep=user_input.get(CONF_DAYS_TO_KEEP, device.days_to_keep),
-                    motion_detection_threshold=user_input.get(CONF_MOTION_DETECTION_THRESHOLD, device.motion_detection_threshold),
-                    motion_detection_frame_skip=user_input.get(CONF_MOTION_DETECTION_FRAME_SKIP, device.motion_detection_frame_skip),
-                    motion_detection_interval=user_input.get(CONF_MOTION_DETECTION_INTERVAL, device.motion_detection_interval),
-                )
-
-                await self.store.async_update_device(self.device_id, updated_device)
-
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-                return self.async_create_entry(title="Camera Updated", data={})
-
+                # info: store the updated camera data and proceed to the next step
+                self.camera_data.update(user_input)
+                return await self.async_step_edit_camera_detection()
+            
         if device is None:
             return self.async_abort(reason="device_not_found")
-
+        
         return self.async_show_form(
             step_id="edit_camera",
             data_schema=vol.Schema({
                 vol.Required("name", default=device.name): str,
                 vol.Required(CONF_CAM_URL, default=device.url): str,
-                vol.Required(CONF_TO_DETECT_OBJECT, default=device.to_detect_object): vol.In({
-                    'person': "Person", 'car': "Car", 'cat': "Cat", 'dog': "Dog"
-                }),
-                vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=device.azure_confidence_threshold): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
-                vol.Optional(CONF_MOTION_DETECTION_THRESHOLD, default=device.motion_detection_threshold): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
-                vol.Optional(CONF_MOTION_DETECTION_FRAME_SKIP, default=device.motion_detection_frame_skip): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=device.motion_detection_interval): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=device.send_notifications): bool,
                 vol.Optional(CONF_ORGANIZE_BY_DAY, default=device.organize_by_day): bool,
                 vol.Optional(CONF_MAX_IMAGES, default=device.max_images): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 vol.Optional(CONF_DAYS_TO_KEEP, default=device.days_to_keep): vol.All(vol.Coerce(int), vol.Range(min=1)),
             }),
+            description_placeholders={
+                "camera_settings": "Update your camera's basic settings."
+            },
+            errors=errors,
+        )
+
+    async def async_step_edit_camera_detection(self, user_input=None):
+        """Second step for editing a camera: Detection settings."""
+        device = self.store.get_device(self.device_id)
+        errors = {}
+        if user_input is not None:
+            # info: Combine the detection settings with the previous camera settings
+            self.camera_data.update(user_input)
+
+            updated_device = DeviceData(
+                id=device.id,
+                name=self.camera_data.get("name", device.name),
+                url=self.camera_data[CONF_CAM_URL],
+                to_detect_object=self.camera_data[CONF_TO_DETECT_OBJECT],
+                azure_confidence_threshold=self.camera_data[CONF_AZURE_CONFIDENCE_THRESHOLD],
+                send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
+                organize_by_day=self.camera_data.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
+                max_images=self.camera_data.get(CONF_MAX_IMAGES, device.max_images),
+                days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, device.days_to_keep),
+                motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, device.motion_detection_min_area),
+                motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, device.motion_detection_history_size,),
+                motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, device.motion_detection_interval),
+            )
+
+            await self.store.async_update_device(self.device_id, updated_device)
+
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+            return self.async_create_entry(title="Camera Updated", data={})
+
+        if device is None:
+            return self.async_abort(reason="device_not_found")
+
+        return self.async_show_form(
+            step_id="edit_camera_detection",
+            data_schema=vol.Schema({
+                vol.Required(
+                    CONF_TO_DETECT_OBJECT, 
+                    default=device.to_detect_object
+                    ): vol.In(
+                        {
+                            "person": "Person",
+                            "car": "Car",
+                            "cat": "Cat",
+                            "dog": "Dog",
+                        }),
+                vol.Required(
+                    CONF_AZURE_CONFIDENCE_THRESHOLD,
+                    default=device.azure_confidence_threshold,
+                ): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
+                vol.Optional(
+                    CONF_MOTION_DETECTION_MIN_AREA,
+                    default=device.motion_detection_min_area,
+                ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional(
+                    CONF_MOTION_DETECTION_HISTORY_SIZE,
+                    default=device.motion_detection_history_size,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(
+                    CONF_MOTION_DETECTION_INTERVAL,
+                    default=device.motion_detection_interval,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
+            }),
+            description_placeholders={
+                "detection_settings": "Update detection settings. Advanced settings are pre-configured; change them only if necessary."
+            },
             errors=errors,
         )
 
@@ -265,7 +349,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
 
             # NOTE: Delete device from Device Registry
             device_registry = async_get_device_registry(self.hass)
-            device_entry = device_registry.async_get(device.id)
+            device_entry = device_registry.async_get_device({(DOMAIN, device.id)})
 
             if device_entry:
                 try:
@@ -276,7 +360,9 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
 
             # NOTE: Delete all entities associated with this device
             entity_registry = async_get_entity_registry(self.hass)
-            entries = async_entries_for_config_entry(entity_registry, self.config_entry.entry_id)
+            entries = async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            )
 
             for entry in entries:
                 if entry.unique_id.startswith(f"{self.device_id}_"):

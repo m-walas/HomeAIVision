@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "HomeAIVision Setup",
-        "description": "Enter title for the integration.",
+        "description": "Enter a title for the integration.",
         "data": {
-          "integration_title": "Custom title"
+          "integration_title": "Integration Title"
         }
       },
       "azure_conf": {
@@ -14,7 +14,16 @@
         "data": {
           "azure_api_key": "Azure API Key",
           "azure_endpoint": "Azure Endpoint URL",
-          "language": "Select the language for the integration."
+          "language": {
+            "description": "Select the language for the integration.",
+            "options": {
+              "en": "English",
+              "pl": "Polish",
+              "es": "Spanish",
+              "fr": "French",
+              "de": "German"
+            }
+          }
         }
       }
     },
@@ -28,53 +37,83 @@
         "title": "HomeAIVision Options",
         "description": "Choose an action to perform.",
         "data": {
-          "action": "Select Action"
+          "action": {
+            "description": "Select an action to perform.",
+            "options": {
+              "add_device": "Add New Camera",
+              "edit_device": "Edit Existing Camera",
+              "remove_device": "Remove Camera"
+            }
+          }
         }
       },
       "add_camera": {
         "title": "Add New Camera",
-        "description": "Configure the new camera settings.",
+        "description": "Configure your camera's basic settings.",
         "data": {
           "name": "Camera Name",
           "cam_url": "Camera URL",
-          "to_detect_object": {
-            "description": "Choose which objects to detect. Ensure at least one is selected.",
-            "person": "Person",
-            "car": "Car",
-            "cat": "Cat",
-            "dog": "Dog"
-          },
-          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "motion_detection_threshold": "Set the motion detection threshold.",
-          "motion_detection_frame_skip": "Set the frame skip for motion detection.",
-          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks.",
           "send_notifications": "Send Notifications",
           "organize_by_day": "Organize Images by Day",
           "max_images": "Maximum Number of Images",
           "days_to_keep": "Days to Keep Images"
         }
       },
+      "add_camera_detection": {
+        "title": "Detection Settings",
+        "description": "Configure detection settings. Advanced settings are pre-configured; change them only if necessary.",
+        "data": {
+          "to_detect_object": {
+            "description": "Choose which object to detect.",
+            "options": {
+              "person": "Person",
+              "car": "Car",
+              "cat": "Cat",
+              "dog": "Dog"
+            }
+          },
+          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
+          "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
+          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks."
+        }
+      },
       "edit_camera": {
         "title": "Edit Camera",
-        "description": "Update the camera settings.",
+        "description": "Update your camera's basic settings.",
         "data": {
           "name": "Camera Name",
           "cam_url": "Camera URL",
-          "to_detect_object": {
-            "description": "Choose which objects to detect. Ensure at least one is selected.",
-            "person": "Person",
-            "car": "Car",
-            "cat": "Cat",
-            "dog": "Dog"
-          },
-          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "motion_detection_threshold": "Set the motion detection threshold.",
-          "motion_detection_frame_skip": "Set the frame skip for motion detection.",
-          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks.",
           "send_notifications": "Send Notifications",
           "organize_by_day": "Organize Images by Day",
           "max_images": "Maximum Number of Images",
           "days_to_keep": "Days to Keep Images"
+        }
+      },
+      "edit_camera_detection": {
+        "title": "Detection Settings",
+        "description": "Update detection settings. Advanced settings are pre-configured; change them only if necessary.",
+        "data": {
+          "to_detect_object": {
+            "description": "Choose which objects to detect.",
+            "options": {
+              "person": "Person",
+              "car": "Car",
+              "cat": "Cat",
+              "dog": "Dog"
+            }
+          },
+          "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
+          "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
+          "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
+          "motion_detection_interval": "Set the interval (in seconds) between motion detection checks."
+        }
+      },
+      "select_device": {
+        "title": "Select Camera",
+        "description": "Choose a camera to edit or remove.",
+        "data": {
+          "device": "Select Camera"
         }
       },
       "remove_device": {
@@ -88,7 +127,8 @@
     "error": {
       "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://.",
       "device_not_found": "The selected device was not found.",
-      "remove_failed": "Failed to remove the device."
+      "remove_failed": "Failed to remove the device.",
+      "no_devices": "No cameras available."
     }
   },
   "message": {
@@ -98,6 +138,7 @@
     "dog_detected": "Dog detected!",
     "new_camera_added": "New camera added.",
     "camera_updated": "Camera updated.",
-    "camera_removed": "Camera removed."
+    "camera_removed": "Camera removed.",
+    "unknown_object_detected": "Detected unknown object multiple times without recognition. Please check the camera manually."
   }
 }

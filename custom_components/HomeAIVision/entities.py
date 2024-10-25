@@ -201,7 +201,7 @@ class ConfidenceThresholdEntity(BaseHomeAIVisionEntity, NumberEntity):
         self._attr_native_min_value = 0.1
         self._attr_native_max_value = 1.0
         self._attr_native_step = 0.01
-        self._attr_mode = 'slider'
+        self._attr_mode = 'number'
 
     @property
     def native_value(self):
@@ -221,6 +221,48 @@ class ConfidenceThresholdEntity(BaseHomeAIVisionEntity, NumberEntity):
         device_data = self.store.get_device(self._device_id)
         if device_data:
             device_data.azure_confidence_threshold = value
+            await self.store.async_update_device(self._device_id, device_data)
+            self.async_write_ha_state()
+
+
+class MotionDetectionIntervalEntity(BaseHomeAIVisionEntity, NumberEntity):
+    """Entity representing the motion detection interval."""
+    
+    def __init__(self, hass, device_config):
+        """
+        Initialize the MotionDetectionIntervalEntity.
+
+        Args:
+            hass (HomeAssistant): The Home Assistant instance.
+            device_config (dict): Configuration parameters for the device.
+        """
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_motion_detection_interval"
+        self._attr_name = f"{self._device_name} Motion Detection Interval"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_native_min_value = 1
+        self._attr_native_max_value = 600
+        self._attr_native_step = 1
+        self._attr_mode = 'slider'
+
+    @property
+    def native_value(self):
+        """Return the current motion detection interval."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            return device_data.motion_detection_interval
+        return None
+
+    async def async_set_native_value(self, value: int):
+        """
+        Set a new motion detection interval value.
+
+        Args:
+            value (int): The new motion detection interval.
+        """
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            device_data.motion_detection_interval = value
             await self.store.async_update_device(self._device_id, device_data)
             self.async_write_ha_state()
 

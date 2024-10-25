@@ -14,6 +14,6 @@ CONF_TO_DETECT_OBJECT = "to_detect_object"
 CONF_AZURE_CONFIDENCE_THRESHOLD = "azure_confidence_threshold"
 CONF_INTEGRATION_TITLE = "integration_title"
 
-CONF_MOTION_DETECTION_THRESHOLD = "motion_detection_threshold"
-CONF_MOTION_DETECTION_FRAME_SKIP = "motion_detection_frame_skip"
 CONF_MOTION_DETECTION_INTERVAL = "motion_detection_interval"
+CONF_MOTION_DETECTION_MIN_AREA = "motion_detection_min_area"
+CONF_MOTION_DETECTION_HISTORY_SIZE = "motion_detection_history_size"

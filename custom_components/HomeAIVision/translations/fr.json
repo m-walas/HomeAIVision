@@ -1,0 +1,144 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration de HomeAIVision",
+        "description": "Entrez un titre pour l'intégration.",
+        "data": {
+          "integration_title": "Titre de l'intégration"
+        }
+      },
+      "azure_conf": {
+        "title": "Configuration Azure",
+        "description": "Fournissez vos identifiants Azure.",
+        "data": {
+          "azure_api_key": "Clé API Azure",
+          "azure_endpoint": "URL du point de terminaison Azure",
+          "language": {
+            "description": "Sélectionnez la langue pour l'intégration.",
+            "options": {
+              "en": "Anglais",
+              "pl": "Polonais",
+              "es": "Espagnol",
+              "fr": "Français",
+              "de": "Allemand"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "azure_credentials_invalid": "Vos identifiants Azure sont invalides. Veuillez vérifier votre clé API et l'URL du point de terminaison."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de HomeAIVision",
+        "description": "Choisissez une action à effectuer.",
+        "data": {
+          "action": {
+            "description": "Sélectionnez une action à effectuer.",
+            "options": {
+              "add_device": "Ajouter une nouvelle caméra",
+              "edit_device": "Modifier une caméra existante",
+              "remove_device": "Supprimer une caméra"
+            }
+          }
+        }
+      },
+      "add_camera": {
+        "title": "Ajouter une nouvelle caméra",
+        "description": "Configurez les paramètres de base de votre caméra.",
+        "data": {
+          "name": "Nom de la caméra",
+          "cam_url": "URL de la caméra",
+          "send_notifications": "Envoyer des notifications",
+          "organize_by_day": "Organiser les images par jour",
+          "max_images": "Nombre maximum d'images",
+          "days_to_keep": "Nombre de jours pour conserver les images"
+        }
+      },
+      "add_camera_detection": {
+        "title": "Paramètres de détection",
+        "description": "Configurez les paramètres de détection. Les paramètres avancés sont préconfigurés ; ne les modifiez que si nécessaire.",
+        "data": {
+          "to_detect_object": {
+            "description": "Choisissez quels objets détecter.",
+            "options": {
+              "person": "Personne",
+              "car": "Voiture",
+              "cat": "Chat",
+              "dog": "Chien"
+            }
+          },
+          "azure_confidence_threshold": "Définissez le seuil de confiance minimal pour la détection d'objets.",
+          "motion_detection_min_area": "Définissez la zone minimale de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "motion_detection_history_size": "Définissez la taille de l'historique de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "motion_detection_interval": "Définissez l'intervalle (en secondes) entre les vérifications de détection de mouvement."
+        }
+      },
+      "edit_camera": {
+        "title": "Modifier la caméra",
+        "description": "Mettez à jour les paramètres de base de votre caméra.",
+        "data": {
+          "name": "Nom de la caméra",
+          "cam_url": "URL de la caméra",
+          "send_notifications": "Envoyer des notifications",
+          "organize_by_day": "Organiser les images par jour",
+          "max_images": "Nombre maximum d'images",
+          "days_to_keep": "Nombre de jours pour conserver les images"
+        }
+      },
+      "edit_camera_detection": {
+        "title": "Paramètres de détection",
+        "description": "Mettez à jour les paramètres de détection. Les paramètres avancés sont préconfigurés ; ne les modifiez que si nécessaire.",
+        "data": {
+          "to_detect_object": {
+            "description": "Choisissez quels objets détecter.",
+            "options": {
+              "person": "Personne",
+              "car": "Voiture",
+              "cat": "Chat",
+              "dog": "Chien"
+            }
+          },
+          "azure_confidence_threshold": "Définissez le seuil de confiance minimal pour la détection d'objets.",
+          "motion_detection_min_area": "Définissez la zone minimale de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "motion_detection_history_size": "Définissez la taille de l'historique de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "motion_detection_interval": "Définissez l'intervalle (en secondes) entre les vérifications de détection de mouvement."
+        }
+      },
+      "select_device": {
+        "title": "Sélectionner une caméra",
+        "description": "Choisissez une caméra à modifier ou à supprimer.",
+        "data": {
+          "device": "Sélectionner une caméra"
+        }
+      },
+      "remove_device": {
+        "title": "Supprimer une caméra",
+        "description": "Sélectionnez une caméra à supprimer.",
+        "data": {
+          "device": "Sélectionner une caméra"
+        }
+      }
+    },
+    "error": {
+      "camera_url_invalid": "L'URL de la caméra est invalide. Elle doit commencer par http:// ou https://.",
+      "device_not_found": "L'appareil sélectionné n'a pas été trouvé.",
+      "remove_failed": "Échec de la suppression de l'appareil.",
+      "no_devices": "Aucune caméra disponible."
+    }
+  },
+  "message": {
+    "person_detected": "Personne détectée !",
+    "car_detected": "Voiture détectée !",
+    "cat_detected": "Chat détecté !",
+    "dog_detected": "Chien détecté !",
+    "new_camera_added": "Nouvelle caméra ajoutée.",
+    "camera_updated": "Caméra mise à jour.",
+    "camera_removed": "Caméra supprimée.",
+    "unknown_object_detected": "Objet inconnu détecté plusieurs fois sans reconnaissance. Veuillez vérifier la caméra manuellement."
+  }
+}

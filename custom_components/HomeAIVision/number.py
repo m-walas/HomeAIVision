@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant  # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
-from .entities import ConfidenceThresholdEntity
+from .entities import ConfidenceThresholdEntity, MotionDetectionIntervalEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         entities.extend([
             # NOTE: ONLY number entities are being set up here
             ConfidenceThresholdEntity(hass, device_config),
+            MotionDetectionIntervalEntity(hass, device_config),
         ])
 
     if entities:

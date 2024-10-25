@@ -3,45 +3,32 @@
     "step": {
       "user": {
         "title": "Konfiguracja HomeAIVision",
-        "description": "Wprowadź własną nazwę integracji.",
+        "description": "Wprowadź tytuł dla integracji.",
         "data": {
-          "integration_title": "Nazwa"
+          "integration_title": "Tytuł integracji"
         }
       },
       "azure_conf": {
         "title": "Konfiguracja Azure",
-        "description": "Wprowadź swoje dane uwierzytelniające Azure.",
+        "description": "Podaj swoje poświadczenia Azure.",
         "data": {
           "azure_api_key": "Klucz API Azure",
-          "azure_endpoint": "Adres URL endpointu Azure",
-          "cam_url": "Adres URL do strumienia kamery",
-          "time_between_requests": "Ustaw interwał czasowy (w sekundach) między żądaniami",
-          "send_notifications": "Wysyłanie powiadomień przy wykryciu",
-          "organize_by_day": "Organizowanie obrazów według dni",
-          "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów",
-          "to_detect_object": {
-            "description": "Wybierz obiekty do wykrywania. Upewnij się, że przynajmniej jeden jest wybrany.",
-            "person": "Osoba",
-            "car": "Samochód",
-            "cat": "Kot",
-            "dog": "Pies"
+          "azure_endpoint": "Adres URL punktu końcowego Azure",
+          "language": {
+            "description": "Wybierz język dla integracji.",
+            "options": {
+              "en": "Angielski",
+              "pl": "Polski",
+              "es": "Hiszpański",
+              "fr": "Francuski",
+              "de": "Niemiecki"
+            }
           }
-        }
-      },
-      "additional_options": {
-        "title": "Dodatkowe Ustawienia",
-        "description": "Konfiguracja dodatkowych opcji dotyczących przechowywania obrazów i powiadomień.",
-        "data": {
-          "max_images": "Ustaw maksymalną liczbę przechowywanych zdjęć na dzień lub łącznie",
-          "days_to_keep": "Określ, ile dni przechowywać obrazy, jeśli są organizowane według dni",
-          "language": "Wybierz język integracji"
         }
       }
     },
     "error": {
-      "azure_credentials_invalid": "Twoje dane uwierzytelniające Azure są nieprawidłowe. Sprawdź swój klucz API i adres URL endpointu.",
-      "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
-      "at_least_one_object_must_be_selected": "Przynajmniej jeden obiekt z listy musi być wybrany."
+      "azure_credentials_invalid": "Twoje poświadczenia Azure są nieprawidłowe. Sprawdź swój klucz API i adres URL punktu końcowego."
     }
   },
   "options": {
@@ -50,67 +37,98 @@
         "title": "Opcje HomeAIVision",
         "description": "Wybierz akcję do wykonania.",
         "data": {
-          "action": "Wybierz Akcję"
+          "action": {
+            "description": "Wybierz akcję do wykonania.",
+            "options": {
+              "add_device": "Dodaj nową kamerę",
+              "edit_device": "Edytuj istniejącą kamerę",
+              "remove_device": "Usuń kamerę"
+            }
+          }
         }
       },
       "add_camera": {
-        "title": "Dodaj Nową Kamerę",
-        "description": "Skonfiguruj ustawienia nowej kamery.",
+        "title": "Dodaj nową kamerę",
+        "description": "Skonfiguruj podstawowe ustawienia kamery.",
         "data": {
-          "name": "Nazwa Kamery",
-          "cam_url": "URL Kamery",
+          "name": "Nazwa kamery",
+          "cam_url": "URL kamery",
+          "send_notifications": "Wysyłaj powiadomienia",
+          "organize_by_day": "Organizuj obrazy według dnia",
+          "max_images": "Maksymalna liczba obrazów",
+          "days_to_keep": "Liczba dni przechowywania obrazów"
+        }
+      },
+      "add_camera_detection": {
+        "title": "Ustawienia wykrywania",
+        "description": "Skonfiguruj ustawienia wykrywania. Zaawansowane ustawienia są wstępnie skonfigurowane; zmieniaj je tylko jeśli to konieczne.",
+        "data": {
           "to_detect_object": {
-            "description": "Wybierz obiekty do wykrywania. Upewnij się, że przynajmniej jeden jest wybrany.",
-            "person": "Osoba",
-            "car": "Samochód",
-            "cat": "Kot",
-            "dog": "Pies"
+            "description": "Wybierz, który obiekt wykrywać.",
+            "options": {
+              "person": "Osoba",
+              "car": "Samochód",
+              "cat": "Kot",
+              "dog": "Pies"
+            }
           },
-          "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów",
-          "motion_detection_threshold": "Ustaw próg wykrywania ruchu",
-          "motion_detection_frame_skip": "Ustaw pomijanie klatek dla wykrywania ruchu",
-          "motion_detection_interval": "Ustaw interwał (w sekundach) między sprawdzeniami wykrywania ruchu",
-          "send_notifications": "Wysyłanie Powiadomień",
-          "organize_by_day": "Organizowanie Obrazów według Dni",
-          "max_images": "Maksymalna Liczba Obrazów",
-          "days_to_keep": "Dni Przechowywania Obrazów"
+          "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
+          "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "motion_detection_interval": "Ustaw interwał (w sekundach) między kontrolami wykrywania ruchu."
         }
       },
       "edit_camera": {
-        "title": "Edytuj Kamerę",
-        "description": "Zaktualizuj ustawienia kamery.",
+        "title": "Edytuj kamerę",
+        "description": "Zaktualizuj podstawowe ustawienia kamery.",
         "data": {
-          "name": "Nazwa Kamery",
-          "cam_url": "URL Kamery",
+          "name": "Nazwa kamery",
+          "cam_url": "URL kamery",
+          "send_notifications": "Wysyłaj powiadomienia",
+          "organize_by_day": "Organizuj obrazy według dnia",
+          "max_images": "Maksymalna liczba obrazów",
+          "days_to_keep": "Liczba dni przechowywania obrazów"
+        }
+      },
+      "edit_camera_detection": {
+        "title": "Ustawienia wykrywania",
+        "description": "Zaktualizuj ustawienia wykrywania. Zaawansowane ustawienia są wstępnie skonfigurowane; zmieniaj je tylko jeśli to konieczne.",
+        "data": {
           "to_detect_object": {
-            "description": "Wybierz obiekty do wykrywania. Upewnij się, że przynajmniej jeden jest wybrany.",
-            "person": "Osoba",
-            "car": "Samochód",
-            "cat": "Kot",
-            "dog": "Pies"
+            "description": "Wybierz, które obiekty wykrywać.",
+            "options": {
+              "person": "Osoba",
+              "car": "Samochód",
+              "cat": "Kot",
+              "dog": "Pies"
+            }
           },
-          "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów",
-          "motion_detection_threshold": "Ustaw próg wykrywania ruchu",
-          "motion_detection_frame_skip": "Ustaw pomijanie klatek dla wykrywania ruchu",
-          "motion_detection_interval": "Ustaw interwał (w sekundach) między sprawdzeniami wykrywania ruchu",
-          "send_notifications": "Wysyłanie Powiadomień",
-          "organize_by_day": "Organizowanie Obrazów według Dni",
-          "max_images": "Maksymalna Liczba Obrazów",
-          "days_to_keep": "Dni Przechowywania Obrazów"
+          "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
+          "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "motion_detection_interval": "Ustaw interwał (w sekundach) między kontrolami wykrywania ruchu."
+        }
+      },
+      "select_device": {
+        "title": "Wybierz kamerę",
+        "description": "Wybierz kamerę do edycji lub usunięcia.",
+        "data": {
+          "device": "Wybierz kamerę"
         }
       },
       "remove_device": {
-        "title": "Usuń Kamerę",
+        "title": "Usuń kamerę",
         "description": "Wybierz kamerę do usunięcia.",
         "data": {
-          "device": "Wybierz Kamerę"
+          "device": "Wybierz kamerę"
         }
       }
     },
     "error": {
       "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
       "device_not_found": "Wybrane urządzenie nie zostało znalezione.",
-      "remove_failed": "Nie udało się usunąć urządzenia."
+      "remove_failed": "Nie udało się usunąć urządzenia.",
+      "no_devices": "Brak dostępnych kamer."
     }
   },
   "message": {
@@ -120,6 +138,7 @@
     "dog_detected": "Wykryto psa!",
     "new_camera_added": "Dodano nową kamerę.",
     "camera_updated": "Kamera została zaktualizowana.",
-    "camera_removed": "Kamera została usunięta."
+    "camera_removed": "Kamera została usunięta.",
+    "unknown_object_detected": "Wykryto nieznany obiekt wielokrotnie bez rozpoznania. Proszę ręcznie sprawdzić kamerę."
   }
 }

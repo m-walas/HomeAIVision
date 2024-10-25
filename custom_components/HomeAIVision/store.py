@@ -22,21 +22,21 @@ class DeviceData:
     organize_by_day = attr.ib(type=bool, default=True)
     max_images = attr.ib(type=int, default=30)
     days_to_keep = attr.ib(type=int, default=7)
-    motion_detection_threshold = attr.ib(type=float, default=10000)
-    motion_detection_frame_skip = attr.ib(type=int, default=2)
-    motion_detection_interval = attr.ib(type=int, default=3)
+    motion_detection_min_area = attr.ib(type=int, default=6000)
+    motion_detection_history_size = attr.ib(type=int, default=10)
+    motion_detection_interval = attr.ib(type=int, default=5)
     device_azure_request_count = attr.ib(type=int, default=0)
 
     @classmethod
     def from_dict(cls, data):
         """
         Create a DeviceData instance from a dictionary.
-        
+
         IMPORTANT: Ensure backward compatibility by providing default values.
-        
+
         Args:
             data (dict): Dictionary containing device data.
-        
+
         Returns:
             DeviceData: An instance of DeviceData.
         """
@@ -45,10 +45,11 @@ class DeviceData:
         data.setdefault('organize_by_day', True)
         data.setdefault('max_images', 30)
         data.setdefault('days_to_keep', 7)
-        data.setdefault('motion_detection_threshold', 10000)
-        data.setdefault('motion_detection_frame_skip', 2)
-        data.setdefault('motion_detection_interval', 3)
+        data.setdefault('motion_detection_min_area', 6000)
+        data.setdefault('motion_detection_history_size', 10)
+        data.setdefault('motion_detection_interval', 5)
         data.setdefault('device_azure_request_count', 0)
+
         return cls(**data)
 
     def asdict(self):

@@ -2,21 +2,27 @@
 
 ![HomeAIVision Banner](images/main.png)
 
-Welcome to **HomeAIVision**! I'm here to make your home safer and smarter by bringing advanced AI vision capabilities right into your Home Assistant setup. Utilizing Azure Cognitive Services, I can analyze your home camera feed in real-time to detect human presence, ensuring that you only receive notifications that matter.
+Welcome to **HomeAIVision**! I'm here to make your home safer and smarter by bringing advanced AI vision capabilities right into your Home Assistant setup. Utilizing Azure Cognitive Services, I can analyze your home camera feed in real-time to detect human presence and other objects, ensuring that you only receive notifications that matter.
 
 ![Home Assistant](https://img.shields.io/badge/Home_Assistant-Custom_Component-blue.svg?style=for-the-badge&logo=homeassistant)
 ![Azure Cognitive Services](https://img.shields.io/badge/Azure_Cognitive_Services-Enabled-lightgrey.svg?style=for-the-badge&logo=microsoftazure)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## Prerequisites
+## Overview
 
-Before installing HomeAIVision, ensure you have:
+HomeAIVision leverages Azure Cognitive Services to provide intelligent object detection and motion analysis from your camera feeds. Whether you're looking to enhance home security or monitor activity, HomeAIVision offers a reliable and customizable solution.
+
+For detailed information on installation, configuration, and technical aspects, please refer to the [Full Documentation](docs/README.md).
+
+## Installation and Configuration
+
+Before installing HomeAIVision, ensure you have the following prerequisites:
 
 - **Home Assistant Installation**: Running locally, on a device like a Raspberry Pi, or a VM. More details can be found [here](https://www.home-assistant.io/installation/).
 - **Camera Setup**: Accessible via a URL, testable in a web browser. Ensure your camera stream is accessible from the network Home Assistant is on.
 - **Azure Account**: Active account with an API key and endpoint URL from Azure Cognitive Services. [Get your API key here](https://portal.azure.com/).
 
-## Installation
+### Step-by-Step Installation and Configuration
 
 1. **Download the Integration**:
    - Visit the [GitHub repository](https://github.com/m-walas/HomeAIVision).
@@ -34,41 +40,57 @@ Before installing HomeAIVision, ensure you have:
    - Click on **Add Integration** and search for **HomeAIVision**.
    - Fill in your Azure API key, endpoint URL, and camera URL as prompted. These can be obtained from your Azure Cognitive Services account.
 
+5. **Configure Detection Settings**:
+   - After adding the integration, go to **Configuration** > **Integrations** > **HomeAIVision** > **Options**.
+   - Configure detection settings such as objects to detect, confidence thresholds, motion detection parameters, notification preferences, and image saving options.
 
-## Configuration
+### Configuration Parameters
 
-### Initial Configuration
-| Parameter                | Description                                           | Default |
-|--------------------------|-------------------------------------------------------|---------|
-| `azure_api_key`          | Azure Cognitive Services API key.                     |         |
-| `azure_endpoint`         | Endpoint URL for Azure Cognitive Services.            |         |
-| `cam_url`                | URL to access the camera feed.                        |         |
-| `time_between_requests`  | Seconds between image requests.                       | `30`    |
-| `send_notifications`     | Enable or disable notifications.                      | `False` |
-| `organize_by_day`        | Organize saved images by day.                         | `True`  |
-| `detected_objects`       | Select which objects to detect (e.g., person, car).   | `person`|
-| `confidence_threshold`   | Minimum confidence threshold for detections.          | `0.6`   |
+#### Initial Configuration
 
-![config_flow](images/config_flow.png)
+| Parameter                     | Description                                           | Default |
+|-------------------------------|-------------------------------------------------------|---------|
+| `azure_api_key`               | Azure Cognitive Services API key.                     |         |
+| `azure_endpoint`              | Endpoint URL for Azure Cognitive Services.            |         |
+| `cam_url`                     | URL to access the camera feed.                        |         |
+| `send_notifications`          | Enable or disable notifications.                      | `False` |
+| `organize_by_day`             | Organize saved images by day.                         | `True`  |
+| `to_detect_object`            | Select which objects to detect (e.g., person, car).   | `person`|
+| `azure_confidence_threshold`  | Minimum confidence threshold for detections.          | `0.6`   |
+| `motion_detection_min_area`   | Minimum area for motion detection.                    | `6000`  |
+| `motion_detection_history_size`| History size for motion detection.                   | `10`    |
+| `motion_detection_interval`   | Interval (in seconds) between motion detection checks.| `5`     |
 
-### Additional Options
+#### Additional Options
+
 | Parameter                | Description                                       | Default |
 |--------------------------|---------------------------------------------------|---------|
 | `max_images`             | Max images per folder or in total.                | `30`    |
 | `days_to_keep`           | Days to keep images if organized by day.          | `7`     |
 | `notification_language`  | Notification language.                            | `English` |
 
+![config_flow](images/config_flow.png)
+
+For more detailed configuration options and advanced settings, refer to the [Configuration Guide](docs/configuration.md).
+
 ## Features
 
-- **Human Detection**: Utilizes Azure Cognitive Services to identify human presence in the camera feed.
-- **Notifications**: Alerts are sent to your devices upon detection to ensure you're always informed.
-- **Image Saving**: Captures and saves images where human activity is detected, organizing them based on your settings.
+- **Object Detection**: Utilizes Azure Cognitive Services to identify objects such as persons, cars, cats, and dogs in the camera feed.
+- **Notifications**: Alerts are sent to your devices upon detection of specified objects, ensuring you're always informed about relevant events.
+- **Image Saving**: Captures and saves images where specified objects are detected, organizing them based on your settings for easy access and review.
+- **Motion Detection**: Detects motion in the camera feed using pixel difference analysis to trigger object detection only when necessary, optimizing performance and reducing unnecessary API calls.
+
+## Technical Documentation
+
+For a comprehensive technical overview of the integration, including architecture, components, workflows, and detailed module descriptions, refer to the [Technical Documentation](docs/technical_documentation.md).
+
+## Camera Processing
+
+Understand how HomeAIVision processes camera feeds, detects motion, and interacts with Azure Cognitive Services by reading the [Camera Processing Details](docs/camera_processing.md).
 
 ## Troubleshooting
 
-- **Verify Azure API and endpoint accuracy**: Ensure that your Azure credentials are correctly entered.
-- **Check Camera Accessibility**: The camera URL must be accessible from your Home Assistant installation.
-- **Review Logs**: Check the Home Assistant logs for errors related to this integration, which can provide clues for troubleshooting.
+If you encounter issues, refer to the [Troubleshooting Guide](docs/troubleshooting.md) for solutions to common problems.
 
 ## Support the Project
 

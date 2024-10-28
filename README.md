@@ -80,6 +80,58 @@ For more detailed configuration options and advanced settings, refer to the [Con
 - **Image Saving**: Captures and saves images where specified objects are detected, organizing them based on your settings for easy access and review.
 - **Motion Detection**: Detects motion in the camera feed using pixel difference analysis to trigger object detection only when necessary, optimizing performance and reducing unnecessary API calls.
 
+## Actions
+
+HomeAIVision provides several actions that you can trigger manually or automate within Home Assistant. These actions allow you to interact with the integration's functionality directly from your Home Assistant interface or through automations.
+
+### Available Actions
+
+#### Manual Analyze (`manual_analyze`)
+
+- **Description**: Performs a manual analysis by fetching an image from the camera, sending it to Azure for object detection, updating counters, saving the image, and sending notifications if enabled.
+- **Use Case**: Useful for on-demand analysis when you want to check the current state without waiting for the next scheduled motion detection.
+
+#### Reset Local Counter (`reset_local_counter`)
+
+- **Description**: Resets the local Azure request counter for a specific device. This is useful for tracking the number of API requests made by each device individually.
+- **Use Case**: Helps in managing and monitoring API usage per device, ensuring that individual devices do not exceed their allotted API calls.
+
+#### Reset Global Counter (`reset_global_counter`)
+
+- **Description**: Resets the global Azure request counter that tracks the total number of API requests made by all devices combined.
+- **Use Case**: Useful for resetting the total count monthly or at regular intervals to align with Azure's free tier limits and monitor overall usage.
+
+### Example Automation: Reset Global Azure Request Counter Monthly
+
+To ensure that your integration does not exceed the Azure free tier limit of 5,000 API requests per month, it is a good practice to reset the global counter at the beginning of each month. This helps monitor the use of sent queries by all devices.
+
+***Note:*** *Remember, the first 12 months of Azure Cognitive Services entitles you to send 5,000 queries per month free of charge.*
+
+#### Automation YAML Example
+
+```yaml
+automation:
+  - alias: "Reset Global Azure Request Counter Monthly"
+    trigger:
+      - platform: time
+        at: "00:00"
+        date: "1" # The first day of the month
+    action:
+      - service: homeaivision.reset_global_counter
+```
+
+### Explanation
+
+- **Trigger**: The automation is set to trigger at midnight on the first day of every month.
+- **Action**: Calls the `homeaivision.reset_global_counter` service to reset the global API request counter.
+
+### Benefits
+
+- **Monitoring**: Helps keep track of monthly API usage and ensures you stay within the free tier limits.
+- **Cost Management**: Prevents unexpected charges by resetting the counter, allowing you to monitor usage effectively.
+
+For more detailed examples and advanced automations, refer to the [Full Documentation](docs/README.md).
+
 ## Technical Documentation
 
 For a comprehensive technical overview of the integration, including architecture, components, workflows, and detailed module descriptions, refer to the [Technical Documentation](docs/technical_documentation.md).

@@ -1,5 +1,6 @@
 import logging
 import uuid
+import re
 import aiohttp # type: ignore
 import voluptuous as vol # type: ignore 
 import homeassistant.helpers.config_validation as cv # type: ignore
@@ -136,11 +137,22 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_select_device()
 
     async def async_step_add_camera(self, user_input=None):
+        """First step for adding a camera: Camera settings."""
         errors = {}
+        NAME_REGEX = re.compile(r"^[A-Za-z0-9_-]+$")
         if user_input is not None:
+            # info: validate the camera URL
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
-            else:
+
+            # info: validate the camera name
+            camera_name = user_input.get("name")
+            if not NAME_REGEX.match(camera_name):
+                errors["name"] = "invalid_characters"
+            elif any(device.name == camera_name for device in self.store.get_devices().values()):
+                errors["name"] = "name_not_unique"
+
+            if not errors:
                 # info: store the camera data and proceed to the next step
                 self.camera_data.update(user_input)
                 return await self.async_step_add_camera_detection()
@@ -240,12 +252,21 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
     async def async_step_edit_camera(self, user_input=None):
         """First step for editing a camera: Camera settings."""
         device = self.store.get_device(self.device_id)
-
         errors = {}
+        NAME_REGEX = re.compile(r"^[A-Za-z0-9_-]+$")
         if user_input is not None:
+            # info: validate the camera URL
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
-            else:
+
+            # info: validate the camera name
+            camera_name = user_input.get("name")
+            if not NAME_REGEX.match(camera_name):
+                errors["name"] = "invalid_characters"
+            elif any(device.name == camera_name for device in self.store.get_devices().values()):
+                errors["name"] = "name_not_unique"
+
+            if not errors:
                 # info: store the updated camera data and proceed to the next step
                 self.camera_data.update(user_input)
                 return await self.async_step_edit_camera_detection()

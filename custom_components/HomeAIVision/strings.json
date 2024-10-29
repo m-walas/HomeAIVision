@@ -26,7 +26,6 @@
     "step": {
       "init": {
         "title": "HomeAIVision Options",
-        "description": "Choose an action to perform.",
         "data": {
           "action": "Select an action to perform."
         }
@@ -96,7 +95,9 @@
       "camera_url_invalid": "The camera URL is invalid. It should start with http:// or https://.",
       "device_not_found": "The selected device was not found.",
       "remove_failed": "Failed to remove the device.",
-      "no_devices": "No cameras available."
+      "no_devices": "No cameras available.",
+      "invalid_characters": "The camera name contains invalid characters. Please use only letters, numbers, hyphens (-), and underscores (_).",
+      "name_not_unique": "A camera with this name already exists."
     }
   },
   "message": {

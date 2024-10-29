@@ -26,7 +26,6 @@
     "step": {
       "init": {
         "title": "Opcje HomeAIVision",
-        "description": "Wybierz akcję do wykonania.",
         "data": {
           "action": "Wybierz akcję do wykonania."
         }
@@ -93,10 +92,12 @@
       }
     },
     "error": {
-      "camera_url_invalid": "URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
+      "camera_url_invalid": "Adres URL kamery jest nieprawidłowy. Powinien zaczynać się od http:// lub https://.",
       "device_not_found": "Wybrane urządzenie nie zostało znalezione.",
       "remove_failed": "Nie udało się usunąć urządzenia.",
-      "no_devices": "Brak dostępnych kamer."
+      "no_devices": "Brak dostępnych kamer.",
+      "invalid_characters": "Nazwa kamery zawiera niedozwolone znaki. Użyj tylko liter, cyfr, myślników (-) i podkreśleń (_).",
+      "name_not_unique": "Kamera o tej nazwie już istnieje."
     }
   },
   "message": {

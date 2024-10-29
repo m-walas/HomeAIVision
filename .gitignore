@@ -40,3 +40,6 @@ config_entries.json
 
 # Ignore previous versions in backup folders
 ver*/
+
+# Icons - send to HACS 
+assets/

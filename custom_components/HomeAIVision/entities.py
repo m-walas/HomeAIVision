@@ -73,6 +73,7 @@ class AzureRequestCountEntity(BaseHomeAIVisionEntity, SensorEntity):
         )
 
 
+# INFO: Diagnostic entities
 class CameraUrlEntity(BaseHomeAIVisionEntity, SensorEntity):
     """Entity representing the camera URL."""
 
@@ -179,6 +180,36 @@ class NotificationEntity(BaseHomeAIVisionEntity, SensorEntity):
         device_data = self.store.get_device(self._device_id)
         if device_data:
             return "On" if device_data.send_notifications else "Off"
+        return None
+
+
+class MaxImagesPerDayEntity(BaseHomeAIVisionEntity, SensorEntity):
+    """Entity representing the maximum images per day for the device."""
+
+    def __init__(self, hass, device_config):
+        """
+        Initialize the MaxImagesPerDayEntity.
+
+        Args:
+            hass (HomeAssistant): The Home Assistant instance.
+            device_config (dict): Configuration parameters for the device.
+        """
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_max_images_per_day"
+        self._attr_name = f"{self._device_name} Max Images Per Day"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return "mdi:camera"
+
+    @property
+    def state(self):
+        """Return the maximum images per day."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            return device_data.max_images_per_day
         return None
 
 

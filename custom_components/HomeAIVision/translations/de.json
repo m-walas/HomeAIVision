@@ -37,8 +37,7 @@
           "name": "Kameraname",
           "cam_url": "Kamera-URL",
           "send_notifications": "Benachrichtigungen senden",
-          "organize_by_day": "Bilder nach Tagen organisieren",
-          "max_images": "Maximale Anzahl von Bildern",
+          "max_images_per_day": "Maximale Anzahl von Bildern",
           "days_to_keep": "Anzahl der Tage zum Behalten der Bilder"
         }
       },
@@ -60,8 +59,7 @@
           "name": "Kameraname",
           "cam_url": "Kamera-URL",
           "send_notifications": "Benachrichtigungen senden",
-          "organize_by_day": "Bilder nach Tagen organisieren",
-          "max_images": "Maximale Anzahl von Bildern",
+          "max_images_per_day": "Maximale Anzahl von Bildern",
           "days_to_keep": "Anzahl der Tage zum Behalten der Bilder"
         }
       },

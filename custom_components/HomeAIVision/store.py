@@ -19,9 +19,8 @@ class DeviceData:
     to_detect_object = attr.ib(type=str)
     azure_confidence_threshold = attr.ib(type=float)
     send_notifications = attr.ib(type=bool, default=False)
-    organize_by_day = attr.ib(type=bool, default=True)
-    max_images = attr.ib(type=int, default=30)
-    days_to_keep = attr.ib(type=int, default=7)
+    max_images_per_day = attr.ib(type=int, default=100)
+    days_to_keep = attr.ib(type=int, default=30)
     motion_detection_min_area = attr.ib(type=int, default=6000)
     motion_detection_history_size = attr.ib(type=int, default=10)
     motion_detection_interval = attr.ib(type=int, default=5)
@@ -42,9 +41,8 @@ class DeviceData:
         """
         # IMPORTANT: Provide default values for missing keys to maintain compatibility
         data.setdefault('send_notifications', False)
-        data.setdefault('organize_by_day', True)
-        data.setdefault('max_images', 30)
-        data.setdefault('days_to_keep', 7)
+        data.setdefault('max_images_per_day', 100)
+        data.setdefault('days_to_keep', 30)
         data.setdefault('motion_detection_min_area', 6000)
         data.setdefault('motion_detection_history_size', 10)
         data.setdefault('motion_detection_interval', 5)

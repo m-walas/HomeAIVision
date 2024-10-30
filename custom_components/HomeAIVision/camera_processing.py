@@ -4,7 +4,7 @@ import io
 import aiohttp  # type: ignore
 import traceback
 
-from PIL import Image, ImageChops, ImageFilter, ImageStat
+from PIL import Image, ImageChops, ImageFilter
 from statistics import median
 
 import time
@@ -21,8 +21,6 @@ from .const import (
     DOMAIN,
     CONF_AZURE_API_KEY,
     CONF_AZURE_ENDPOINT,
-    CONF_TO_DETECT_OBJECT,
-    CONF_AZURE_CONFIDENCE_THRESHOLD,
     CONF_MOTION_DETECTION_MIN_AREA,
     CONF_MOTION_DETECTION_HISTORY_SIZE,
 )
@@ -47,11 +45,8 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
     device_id = device_config['id']
     store = hass.data[DOMAIN]['store']
     cam_frames_path = hass.config.path("www/HomeAIVision/cam_frames/")
-    days_to_keep = device_config.get("days_to_keep", 7)
-    organize_by_day = device_config.get("organize_by_day", True)
-    max_images = device_config.get("max_images", 30)
-    to_detect_object = [device_config.get(CONF_TO_DETECT_OBJECT)]
-    azure_confidence_threshold = device_config.get(CONF_AZURE_CONFIDENCE_THRESHOLD, 0.6)
+    days_to_keep = device_config.get("days_to_keep", 30)
+    max_images_per_day = device_config.get("max_images_per_day", 100)
     send_notifications = device_config.get("send_notifications", False)
     cam_url = device_config.get("url", "")
 
@@ -80,18 +75,16 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
         """
         async with aiohttp.ClientSession() as session:
 
-            reference_image = None # info: Reference image for motion detection
-            reference_image_time = time.monotonic()  # info: Time when reference image was last updated
-            object_present = False  # info: Flag to track if object is currently present
-            motion_history = []  # info: List to store motion scores when no object is present
-            no_object_detected_counter = 0  # info: Counter to track consecutive frames with no object detected
-            unknown_object_counter = 0  # info: Counter for unknown objects
-            max_unknown_object_counter = 20  # info: Max count before emergency notification
-            azure_request_intervals = [0, 1, 2, 3, 4, 10, 15, 20]  # info: Intervals for Azure requests
-            max_no_object_detected = 5  # info: Maximum number of consecutive frames with no object detected before updating reference image
-            max_dynamic_threshold = 10000  # info: Maximum allowed dynamic threshold
-            min_dynamic_threshold = 2000  # info: Minimum allowed dynamic threshold
-            outlier_multiplier = 3  # info: Multiplier for determining outliers
+            reference_image = None  # Reference image for motion detection
+            reference_image_time = time.monotonic()  # Time when reference image was last updated
+            object_present = False  # Flag to track if object is currently present
+            motion_history = []  # List to store motion scores when no object is present
+            unknown_object_counter = 0  # Counter for unknown objects
+            max_unknown_object_counter = 20  # Max count before emergency notification
+            azure_request_intervals = [0, 1, 2, 3, 4, 10, 15, 20]  # Intervals for Azure requests
+            max_dynamic_threshold = 10000  # Maximum allowed dynamic threshold
+            min_dynamic_threshold = 2000  # Minimum allowed dynamic threshold
+            outlier_multiplier = 3  # Multiplier for determining outliers
 
             while True:
                 try:
@@ -136,8 +129,7 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                             # NOTE: Apply threshold to obtain a binary image
                             threshold = diff_image.point(lambda p: p > 50 and 255)
 
-                            # NOTE: Apply morphological operations to reduce noise
-                            # NOTE: Dilation followed by erosion (opening)
+                            # NOTE: Apply morphological operations to reduce noise (opening)
                             cleaned = threshold.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
 
                             # NOTE: Calculate motion score (sum of white pixels)
@@ -178,17 +170,13 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
 
                                 if motion_score > dynamic_threshold:
                                     _LOGGER.debug(f"Significant motion detected. Motion score: {motion_score}")
-                                    
+
                                     # IMPORTANT: Decide whether to send a request to Azure
                                     if unknown_object_counter in azure_request_intervals:
                                         _LOGGER.debug(f"Sending image to Azure for analysis. Counter: {unknown_object_counter}")
 
                                         # NOTE: Motion detected, send image to Azure
-                                        (
-                                            detected,
-                                            modified_image_data,
-                                            detected_object_name,
-                                        ) = await analyze_image_with_azure(
+                                        detected, modified_image_data, detected_object_name = await analyze_image_with_azure(
                                             image_data,
                                             entry.data.get(CONF_AZURE_API_KEY),
                                             entry.data.get(CONF_AZURE_ENDPOINT),
@@ -214,15 +202,13 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
 
                                         if detected:
                                             # warning: Object is being present now
-                                            object_present = True  
+                                            object_present = True
                                             _LOGGER.debug(f"Object '{detected_object_name}' detected by Azure.")
-                                            # warning: Reset counters
-                                            no_object_detected_counter = 0
+                                            # info: Reset unknown_object_counter
                                             unknown_object_counter = 0
                                         else:
                                             _LOGGER.debug("No target object detected by Azure.")
-                                            # warning: Increment counters
-                                            no_object_detected_counter += 1
+                                            # warning: Increment unknown_object_counter
                                             unknown_object_counter += 1
 
                                             if unknown_object_counter >= max_unknown_object_counter:
@@ -237,29 +223,24 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                                         image_path=None,
                                                         notification_language=language,
                                                     )
-                                                # warning: Reset unknown object counter
-                                                unknown_object_counter = 0
-
-                                            if no_object_detected_counter >= max_no_object_detected:
+                                                # IMPORTANT: Update reference image after reaching max detections
                                                 reference_age = time.monotonic() - reference_image_time
-                                                _LOGGER.info("Updating reference image after no object detected. Old reference image age: {:.2f} seconds.".format(reference_age))
+                                                _LOGGER.info(f"Updating reference image after {unknown_object_counter} unknown detections. Old reference image age: {reference_age:.2f} seconds.")
                                                 reference_image = current_image
                                                 reference_image_time = time.monotonic()
                                                 motion_history.clear()
-                                                # warning: Reset counters
-                                                no_object_detected_counter = 0 
-                                                unknown_object_counter = 0 
-                                                # warning: Object is no longer present
-                                                object_present = False  
-                                                continue
+                                                # info: Reset unknown_object_counter
+                                                unknown_object_counter = 0
 
                                         # NOTE: Save the image if an object is detected
                                         if detected and modified_image_data:
+                                            device_name = device_config['name']
                                             save_path = await save_image(
                                                 cam_frames_path,
+                                                device_name,
                                                 modified_image_data,
-                                                organize_by_day,
-                                                max_images,
+                                                max_images_per_day,
+                                                days_to_keep,
                                             )
                                             # NOTE: Send notification if enabled
                                             if send_notifications:
@@ -272,42 +253,44 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                                     hass,
                                                     detected_object_name,
                                                     relative_path,
-                                                    organize_by_day,
-                                                    language,
+                                                    notification_language=language,
                                                 )
-
                                             # warning: Reset motion history
                                             motion_history.clear()
-                                            # important: Do not update reference image until object is no longer present
                                         else:
                                             _LOGGER.debug("No target object detected by Azure.")
-                                            # info: Possible false alarm, continue monitoring
                                     else:
                                         _LOGGER.debug(f"Skipping Azure analysis at counter {unknown_object_counter}.")
-                                        # info: Increment counters
+                                        # info: Increment unknown_object_counter
                                         unknown_object_counter += 1
-                                        no_object_detected_counter += 1
 
-                                        if no_object_detected_counter >= max_no_object_detected:
+                                        if unknown_object_counter >= max_unknown_object_counter:
+                                            _LOGGER.info("Unknown object detected multiple times without recognition.")
+                                            # IMPORTANT: Send emergency notification
+                                            if send_notifications:
+                                                language = store.get_language()
+                                                _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
+                                                await send_notification(
+                                                    hass,
+                                                    "unknown_object",
+                                                    image_path=None,
+                                                    notification_language=language,
+                                                )
+                                            # IMPORTANT: Update reference image after reaching max detections
                                             reference_age = time.monotonic() - reference_image_time
-                                            _LOGGER.info("Updating reference image after no object detected. Old reference image age: {:.2f} seconds.".format(reference_age))
+                                            _LOGGER.info(f"Updating reference image after {unknown_object_counter} unknown detections. Old reference image age: {reference_age:.2f} seconds.")
                                             reference_image = current_image
                                             reference_image_time = time.monotonic()
                                             motion_history.clear()
-                                            # warning: Reset counters
-                                            no_object_detected_counter = 0  
+                                            # Reset unknown_object_counter
                                             unknown_object_counter = 0
-                                            # warning: Object is no longer present
-                                            object_present = False  
-                                            continue
                                 else:
                                     _LOGGER.debug(f"No significant motion detected. Motion score: {motion_score}")
                                     # info: Update reference image periodically when no motion is detected
                                     reference_image = current_image
                                     reference_image_time = time.monotonic()
                                     _LOGGER.debug("Reference image updated.")
-                                    # warning: Reset counters
-                                    no_object_detected_counter = 0
+                                    # Reset unknown_object_counter
                                     unknown_object_counter = 0
                             else:
                                 # info: Object is present, check if it has left the scene
@@ -320,8 +303,7 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                     reference_image = current_image
                                     reference_image_time = time.monotonic()
                                     _LOGGER.debug("Reference image updated after object left.")
-                                    # warning: Reset counters
-                                    no_object_detected_counter = 0
+                                    # Reset unknown_object_counter
                                     unknown_object_counter = 0
                                 else:
                                     # info: calculate how long the reference image has been held
@@ -357,5 +339,5 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
 
                 await asyncio.sleep(motion_detection_interval)
 
-    # IMPORTANT: Start the periodic camera check task
+    # IMPORTANT: Start the periodic camera check task only once
     hass.loop.create_task(periodic_check())

@@ -16,8 +16,7 @@ from .const import (
     CONF_AZURE_API_KEY,
     CONF_AZURE_ENDPOINT,
     CONF_CAM_URL,
-    CONF_MAX_IMAGES,
-    CONF_ORGANIZE_BY_DAY,
+    CONF_MAX_IMAGES_PER_DAY,
     CONF_DAYS_TO_KEEP,
     CONF_SEND_NOTIFICATIONS,
     CONF_LANGUAGE,
@@ -163,11 +162,10 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required("name", default="Camera"): str,
                 vol.Required(CONF_CAM_URL): str,
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=False): bool,
-                vol.Optional(CONF_ORGANIZE_BY_DAY, default=True): bool,
-                vol.Optional(CONF_MAX_IMAGES, default=30): vol.All(
+                vol.Optional(CONF_MAX_IMAGES_PER_DAY, default=100): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
-                vol.Optional(CONF_DAYS_TO_KEEP, default=7): vol.All(
+                vol.Optional(CONF_DAYS_TO_KEEP, default=30): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
             }),
@@ -192,9 +190,8 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 to_detect_object=self.camera_data[CONF_TO_DETECT_OBJECT],
                 azure_confidence_threshold=self.camera_data[CONF_AZURE_CONFIDENCE_THRESHOLD],
                 send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, False),
-                organize_by_day=self.camera_data.get(CONF_ORGANIZE_BY_DAY, True),
-                max_images=self.camera_data.get(CONF_MAX_IMAGES, 30),
-                days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, 7),
+                max_images_per_day=self.camera_data.get(CONF_MAX_IMAGES_PER_DAY, 100),
+                days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, 30),
                 motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, 6000),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, 10),
                 motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 1),
@@ -280,8 +277,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required("name", default=device.name): str,
                 vol.Required(CONF_CAM_URL, default=device.url): str,
                 vol.Optional(CONF_SEND_NOTIFICATIONS, default=device.send_notifications): bool,
-                vol.Optional(CONF_ORGANIZE_BY_DAY, default=device.organize_by_day): bool,
-                vol.Optional(CONF_MAX_IMAGES, default=device.max_images): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_MAX_IMAGES_PER_DAY, default=device.max_images_per_day): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 vol.Optional(CONF_DAYS_TO_KEEP, default=device.days_to_keep): vol.All(vol.Coerce(int), vol.Range(min=1)),
             }),
             description_placeholders={
@@ -305,8 +301,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 to_detect_object=self.camera_data[CONF_TO_DETECT_OBJECT],
                 azure_confidence_threshold=self.camera_data[CONF_AZURE_CONFIDENCE_THRESHOLD],
                 send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
-                organize_by_day=self.camera_data.get(CONF_ORGANIZE_BY_DAY, device.organize_by_day),
-                max_images=self.camera_data.get(CONF_MAX_IMAGES, device.max_images),
+                max_images_per_day=self.camera_data.get(CONF_MAX_IMAGES_PER_DAY, device.max_images_per_day),
                 days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, device.days_to_keep),
                 motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, device.motion_detection_min_area),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, device.motion_detection_history_size,),

@@ -101,9 +101,10 @@ async def handle_manual_analyze(call: ServiceCall, hass: HomeAssistant):
                         cam_frames_path = hass.config.path("www/HomeAIVision/cam_frames/")
                         save_path = await save_image(
                             cam_frames_path,
+                            device.name,
                             modified_image_data,
-                            device.organize_by_day,
-                            device.max_images,
+                            device.max_images_per_day,
+                            device.days_to_keep,
                         )
                         _LOGGER.info(f"[HomeAIVision] Analysis completed for device {device_id}, image saved at {save_path}")
 
@@ -116,7 +117,6 @@ async def handle_manual_analyze(call: ServiceCall, hass: HomeAssistant):
                                 hass,
                                 detected_object_name,
                                 relative_path,
-                                device.organize_by_day,
                                 language,
                             )
 

@@ -10,7 +10,8 @@ from .entities import (
     GlobalAzureRequestCountEntity,
     AzureRequestCountEntity,
     DeviceIdEntity,
-    NotificationEntity
+    NotificationEntity,
+    MaxImagesPerDayEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             CameraUrlEntity(hass, device_config),
             DeviceIdEntity(hass, device_config),
             NotificationEntity(hass, device_config),
+            MaxImagesPerDayEntity(hass, device_config),
         ])
 
     if entities:

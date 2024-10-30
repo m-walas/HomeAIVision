@@ -1,7 +1,7 @@
 {
   "domain": "homeaivision",
   "name": "Home AI Vision",
-  "version": "24.10.0",
+  "version": "24.10.1",
   "documentation": "https://github.com/m-walas/HomeAIVision",
   "issue_tracker": "https://github.com/m-walas/HomeAIVision/issues",
   "requirements": [
@@ -20,6 +20,6 @@
   "iot_class": "cloud_polling",
   "integration_type": "hub",
   "config_flow": true,
-  "single_config_entry": false,
+  "single_config_entry": true,
   "loggers": ["homeaivision", "azure_cognitiveservices_vision_computervision"]
 }

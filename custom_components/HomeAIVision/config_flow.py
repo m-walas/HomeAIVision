@@ -1,14 +1,15 @@
 import logging
 import uuid
+import asyncio
 import re
-import aiohttp # type: ignore
-import voluptuous as vol # type: ignore 
-import homeassistant.helpers.config_validation as cv # type: ignore
+import aiohttp  # type: ignore
+import voluptuous as vol  # type: ignore
+import homeassistant.helpers.config_validation as cv  # type: ignore
 
-from homeassistant import config_entries # type: ignore
-from homeassistant.core import callback # type: ignore 
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry # type: ignore
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry # type: ignore
+from homeassistant import config_entries  # type: ignore
+from homeassistant.core import callback  # type: ignore
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry, async_entries_for_config_entry  # type: ignore
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry  # type: ignore
 from homeassistant.helpers.selector import selector  # type: ignore
 
 from .const import (
@@ -27,7 +28,6 @@ from .const import (
     CONF_MOTION_DETECTION_HISTORY_SIZE,
     CONF_MOTION_DETECTION_INTERVAL,
 )
-
 from .store import HomeAIVisionStore, DeviceData
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,7 +155,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 # info: store the camera data and proceed to the next step
                 self.camera_data.update(user_input)
                 return await self.async_step_add_camera_detection()
-            
+
         return self.async_show_form(
             step_id="add_camera",
             data_schema=vol.Schema({
@@ -194,7 +194,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, 30),
                 motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, 6000),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, 10),
-                motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 1),
+                motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 5),
             )
 
             _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
@@ -204,7 +204,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
             return self.async_create_entry(title="New Camera Added", data={})
-        
+
         return self.async_show_form(
             step_id="add_camera_detection",
             data_schema=vol.Schema({
@@ -229,7 +229,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
         devices = self.store.get_devices()
         if not devices:
             return self.async_abort(reason="no_devices")
-        
+
         device_options = {dev_id: dev_conf.name for dev_id, dev_conf in devices.items()}
 
         if user_input is None:
@@ -239,7 +239,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     vol.Required("device"): vol.In(device_options),
                 }),
             )
-        
+
         self.device_id = user_input["device"]
         if self.remove:
             return await self.async_step_remove_device()
@@ -267,10 +267,10 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 # info: store the updated camera data and proceed to the next step
                 self.camera_data.update(user_input)
                 return await self.async_step_edit_camera_detection()
-            
+
         if device is None:
             return self.async_abort(reason="device_not_found")
-        
+
         return self.async_show_form(
             step_id="edit_camera",
             data_schema=vol.Schema({
@@ -323,12 +323,12 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_TO_DETECT_OBJECT, 
                     default=device.to_detect_object
-                    ): selector({
-                        "select": {
-                            "options": ["person", "car", "cat", "dog"],
-                            "translation_key": "to_detect_object",
-                        }
-                    }),
+                ): selector({
+                    "select": {
+                        "options": ["person", "car", "cat", "dog"],
+                        "translation_key": "to_detect_object",
+                    }
+                }),
                 vol.Required(
                     CONF_AZURE_CONFIDENCE_THRESHOLD,
                     default=device.azure_confidence_threshold,
@@ -379,6 +379,20 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             for entry in entries:
                 if entry.unique_id.startswith(f"{self.device_id}_"):
                     entity_registry.async_remove(entry.entity_id)
+
+            # NOTE: Cancel and remove the associated camera task
+            camera_tasks = self.hass.data[DOMAIN].get('camera_tasks', {})
+            task_tuple = camera_tasks.pop(self.device_id, None)
+            if task_tuple:
+                task, stop_event = task_tuple
+                stop_event.set()
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    _LOGGER.debug(f"[HomeAIVision] Camera task for device {self.device_id} successfully cancelled.")
+                except Exception as e:
+                    _LOGGER.error(f"[HomeAIVision] Error cancelling camera task for device {self.device_id}: {e}")
 
             return self.async_create_entry(title="Camera Removed", data={})
         else:

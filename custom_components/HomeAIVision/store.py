@@ -2,12 +2,19 @@ import logging
 import attr  # type: ignore
 
 from homeassistant.helpers.storage import Store  # type: ignore
+from homeassistant.helpers.dispatcher import async_dispatcher_send  # type: ignore
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = "homeaivision.devices"
 STORAGE_VERSION = 1
 
+# NOTE: Define signals for device addition and removal
+DEVICE_ADDED_SIGNAL = f"{DOMAIN}_device_added"
+DEVICE_EDITED_SIGNAL = f"{DOMAIN}_device_edited"
+DEVICE_REMOVED_SIGNAL = f"{DOMAIN}_device_removed"
 
 @attr.s
 class DeviceData:
@@ -30,8 +37,6 @@ class DeviceData:
     def from_dict(cls, data):
         """
         Create a DeviceData instance from a dictionary.
-
-        IMPORTANT: Ensure backward compatibility by providing default values.
 
         Args:
             data (dict): Dictionary containing device data.
@@ -158,7 +163,7 @@ class HomeAIVisionStore:
         """
         return self.devices
 
-    async def async_add_device(self, device_data):
+    async def async_add_device(self, device_data: DeviceData):
         """
         Add a new device to the store.
         
@@ -169,8 +174,10 @@ class HomeAIVisionStore:
         _LOGGER.debug(f"[HomeAIVision] Added new device: {device_data.asdict()}")
         await self.async_save()
         self._notify_listeners()
+        # NOTE: Send a signal to notify the integration about the new device
+        async_dispatcher_send(self.hass, DEVICE_ADDED_SIGNAL, device_data.asdict())
 
-    async def async_update_device(self, device_id, device_data):
+    async def async_update_device(self, device_id, device_data: DeviceData):
         """
         Update an existing device in the store.
         
@@ -182,8 +189,10 @@ class HomeAIVisionStore:
         _LOGGER.debug(f"[HomeAIVision] Updated device: {device_id}: {device_data.asdict()}")
         await self.async_save()
         self._notify_listeners()
+        # NOTE: Send a signal to notify the integration about the updated device
+        async_dispatcher_send(self.hass, DEVICE_EDITED_SIGNAL, device_data.asdict())
 
-    async def async_remove_device(self, device_id):
+    async def async_remove_device(self, device_id: str):
         """
         Remove a device from the store.
         
@@ -191,10 +200,12 @@ class HomeAIVisionStore:
             device_id (str): The unique identifier of the device to remove.
         """
         if device_id in self.devices:
-            del self.devices[device_id]
-            _LOGGER.debug(f"[HomeAIVision] Deleted device: {device_id}")
+            device = self.devices.pop(device_id)
+            _LOGGER.debug(f"[HomeAIVision] Deleted device: {device_id}.")
             await self.async_save()
             self._notify_listeners()
+            # NOTE: Send a signal to notify the integration about the removed device
+            async_dispatcher_send(self.hass, DEVICE_REMOVED_SIGNAL, device.asdict())
         else:
             _LOGGER.warning(f"[HomeAIVision] Attempted to delete non-existent device: {device_id}")
 

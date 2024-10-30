@@ -29,18 +29,16 @@ from .azure_client import analyze_image_with_azure
 
 _LOGGER = logging.getLogger(__name__)
 
-async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, device_config: dict):
-    """
-    Sets up a periodic camera check for motion detection and analysis.
 
-    This function initializes the periodic task that fetches images from the camera,
-    detects motion based on pixel differences, and sends images to Azure for object analysis
-    when significant motion is detected.
+async def periodic_check(hass: HomeAssistant, entry: ConfigEntry, device_config: dict, stop_event: asyncio.Event):
+    """
+    Periodically checks the camera feed for motion and analyzes detected motion.
 
     Args:
         hass (HomeAssistant): The Home Assistant instance.
         entry (ConfigEntry): The configuration entry for the integration.
         device_config (dict): Configuration parameters for the specific device.
+        stop_event (asyncio.Event): Signal to stop the periodic check.
     """
     device_id = device_config['id']
     store = hass.data[DOMAIN]['store']
@@ -62,38 +60,25 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
         )
         return
 
-    # INFO: Clean up old images based on retention policy
+    # NOTE: Clean up old images based on retention policy
     await clean_up_old_images(cam_frames_path, days_to_keep)
 
-    async def periodic_check():
-        """
-        Periodically checks the camera feed for motion and analyzes detected motion.
+    _LOGGER.debug(f"[HomeAIVision] Starting periodic_check for device {device_id}")
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+            reference_image = None                                  # info: Reference image for motion detection
+            reference_image_time = time.monotonic()                 # info: Time when reference image was last updated
+            object_present = False                                  # info: Flag to track if object is currently present
+            motion_history = []                                     # info: List to store motion scores when no object is present
+            unknown_object_counter = 0                              # info: Counter for unknown objects
+            max_unknown_object_counter = 20                         # info: Max count before emergency notification
+            azure_request_intervals = [0, 1, 2, 3, 4, 10, 15, 20]   # info: Intervals for Azure requests
+            max_dynamic_threshold = 10000                           # info: Maximum allowed dynamic threshold
+            min_dynamic_threshold = 2000                            # info: Minimum allowed dynamic threshold
+            outlier_multiplier = 3                                  # info: Multiplier for determining outliers
 
-        This coroutine runs in an infinite loop, fetching images from the camera at specified intervals,
-        detecting motion by comparing with a reference image, and sending images to Azure for further analysis
-        if significant motion is detected.
-        """
-        async with aiohttp.ClientSession() as session:
-
-            reference_image = None  # Reference image for motion detection
-            reference_image_time = time.monotonic()  # Time when reference image was last updated
-            object_present = False  # Flag to track if object is currently present
-            motion_history = []  # List to store motion scores when no object is present
-            unknown_object_counter = 0  # Counter for unknown objects
-            max_unknown_object_counter = 20  # Max count before emergency notification
-            azure_request_intervals = [0, 1, 2, 3, 4, 10, 15, 20]  # Intervals for Azure requests
-            max_dynamic_threshold = 10000  # Maximum allowed dynamic threshold
-            min_dynamic_threshold = 2000  # Minimum allowed dynamic threshold
-            outlier_multiplier = 3  # Multiplier for determining outliers
-
-            while True:
+            while not stop_event.is_set():
                 try:
-                    # # IMPORTANT: Check if system is armed
-                    # if not hass.states.is_state('input_boolean.homeaivision_armed', 'on'):
-                    #     _LOGGER.debug("System is disarmed. Skipping motion detection.")
-                    #     await asyncio.sleep(motion_detection_interval)
-                    #     continue
-
                     # NOTE: Fetch the latest device configuration
                     device = store.get_device(device_id)
                     if not device:
@@ -102,38 +87,31 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                     to_detect_object = [device.to_detect_object]
                     azure_confidence_threshold = device.azure_confidence_threshold
 
-                    # INFO: Fetch image from the camera
-                    async with session.get(cam_url, timeout=30) as response:
+                    # NOTE: Fetch image from the camera
+                    async with session.get(cam_url) as response:
                         if response.status == 200:
                             image_data = await response.read()
 
-                            # INFO: Open image using PIL in grayscale mode
-                            try:
-                                current_image = Image.open(io.BytesIO(image_data)).convert('L')
-                            except (IOError, SyntaxError) as e:
-                                _LOGGER.error(f"Failed to open image: {e}")
-                                await asyncio.sleep(motion_detection_interval)
-                                continue
-
                             if reference_image is None:
-                                # info: Set the initial reference image
-                                reference_image = current_image
-                                reference_image_time = time.monotonic()
-                                _LOGGER.debug("Reference image initialized.")
-                                await asyncio.sleep(motion_detection_interval)
+                                try:
+                                    current_image = await hass.async_add_executor_job(
+                                        lambda: Image.open(io.BytesIO(image_data)).convert('L')
+                                    )
+                                    reference_image = current_image
+                                    reference_image_time = time.monotonic()
+                                    _LOGGER.debug("Reference image initialized.")
+                                except (IOError, SyntaxError) as e:
+                                    _LOGGER.error(f"Failed to initialize reference image: {e}")
                                 continue
 
-                            # NOTE: Calculate the difference between the current image and the reference image
-                            diff_image = ImageChops.difference(reference_image, current_image)
-
-                            # NOTE: Apply threshold to obtain a binary image
-                            threshold = diff_image.point(lambda p: p > 50 and 255)
-
-                            # NOTE: Apply morphological operations to reduce noise (opening)
-                            cleaned = threshold.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
-
-                            # NOTE: Calculate motion score (sum of white pixels)
-                            motion_score = sum(cleaned.histogram()[255:])
+                            # NOTE: Process image using executor to avoid blocking
+                            try:
+                                motion_score, current_image = await hass.async_add_executor_job(
+                                    process_image, image_data, reference_image
+                                )
+                            except (IOError, SyntaxError) as e:
+                                _LOGGER.error(f"Failed to process image: {e}")
+                                continue
 
                             if not object_present:
                                 # NOTE: Outlier detection threshold
@@ -257,11 +235,8 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                                 )
                                             # warning: Reset motion history
                                             motion_history.clear()
-                                        else:
-                                            _LOGGER.debug("No target object detected by Azure.")
                                     else:
                                         _LOGGER.debug(f"Skipping Azure analysis at counter {unknown_object_counter}.")
-                                        # info: Increment unknown_object_counter
                                         unknown_object_counter += 1
 
                                         if unknown_object_counter >= max_unknown_object_counter:
@@ -282,7 +257,7 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                             reference_image = current_image
                                             reference_image_time = time.monotonic()
                                             motion_history.clear()
-                                            # Reset unknown_object_counter
+                                            # info: Reset unknown_object_counter
                                             unknown_object_counter = 0
                                 else:
                                     _LOGGER.debug(f"No significant motion detected. Motion score: {motion_score}")
@@ -290,40 +265,37 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                                     reference_image = current_image
                                     reference_image_time = time.monotonic()
                                     _LOGGER.debug("Reference image updated.")
-                                    # Reset unknown_object_counter
+                                    # info: reset unknown_object_counter
                                     unknown_object_counter = 0
                             else:
                                 # info: Object is present, check if it has left the scene
                                 if motion_score < motion_detection_min_area:
                                     _LOGGER.debug(f"No motion detected. Motion score: {motion_score}")
-                                    # info: Possible that object has stopped moving
                                     object_present = False
-                                    _LOGGER.debug("Object is no longer present.")
-                                    # important: Update the reference image now that the scene is clear
+                                    _LOGGER.debug("Object has left the scene.")
+                                    # important: Update reference image after object leaves the scene
                                     reference_image = current_image
                                     reference_image_time = time.monotonic()
                                     _LOGGER.debug("Reference image updated after object left.")
-                                    # Reset unknown_object_counter
                                     unknown_object_counter = 0
                                 else:
                                     # info: calculate how long the reference image has been held
                                     reference_age = time.monotonic() - reference_image_time
-                                    _LOGGER.debug(f"Object still present. Motion score: {motion_score}. Reference image age: {reference_age:.2f} seconds.")
-                                    # info: Object is still present, do nothing
+                                    _LOGGER.debug(f"Object still present. Reference image age: {reference_age:.2f} seconds")
+                                    # info: object still present, do nothing
                                     pass
                         else:
                             _LOGGER.warning(
-                                f"[HomeAIVision] Failed to fetch image, "
-                                f"status code: {response.status}"
+                                f"[HomeAIVision] Failed to fetch image, status code: {response.status}"
                             )
                 except ClientConnectorError:
                     _LOGGER.error(
-                        f"[HomeAIVision] Unable to connect to the camera at "
-                        f"{cam_url}. Please ensure the camera is online "
-                        f"and the URL is correct."
+                        f"[HomeAIVision] Unable to connect to the camera at {cam_url}. "
+                        f"Please ensure the camera is online and the URL is correct."
                     )
                     # NOTE: Create a persistent notification for connection errors
-                    pn_create(
+                    await hass.async_add_executor_job(
+                        pn_create,
                         hass,
                         (
                             f"Unable to connect to the camera at {cam_url}. "
@@ -332,12 +304,41 @@ async def setup_periodic_camera_check(hass: HomeAssistant, entry: ConfigEntry, d
                         title="HomeAIVision Camera Connection Error",
                         notification_id=f"homeaivision_camera_error_{device_id}",
                     )
+                except asyncio.CancelledError:
+                    _LOGGER.debug(f"[HomeAIVision] Camera check task for device {device_id} cancelled.")
+                    break
                 except Exception as e:
                     _LOGGER.error(f"[HomeAIVision] Unexpected error: {e}")
                     # info: Log the full traceback for debugging purposes
                     _LOGGER.debug(traceback.format_exc())
 
-                await asyncio.sleep(motion_detection_interval)
+                # _LOGGER.debug(f"[HomeAIVision] Waiting for {motion_detection_interval} seconds or stop_event")
+                try:
+                    await asyncio.wait_for(stop_event.wait(), timeout=motion_detection_interval)
+                except asyncio.TimeoutError:
+                    pass
 
-    # IMPORTANT: Start the periodic camera check task only once
-    hass.loop.create_task(periodic_check())
+    except asyncio.CancelledError:
+        _LOGGER.debug(f"[HomeAIVision] periodic_check for device {device_id} was cancelled.")
+        raise
+    finally:
+        _LOGGER.debug(f"[HomeAIVision] periodic_check has finished for device {device_id}")
+
+
+def process_image(image_data, reference_image):
+    """
+    Process the image and calculate motion score.
+
+    Args:
+        image_data (bytes): The raw image data.
+        reference_image (PIL.Image.Image): The reference image for motion detection.
+
+    Returns:
+        tuple: (motion_score, current_image)
+    """
+    current_image = Image.open(io.BytesIO(image_data)).convert('L')
+    diff_image = ImageChops.difference(reference_image, current_image)
+    threshold = diff_image.point(lambda p: p > 50 and 255)
+    cleaned = threshold.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
+    motion_score = sum(cleaned.histogram()[255:])
+    return motion_score, current_image

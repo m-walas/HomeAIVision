@@ -256,11 +256,11 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             if not verify_camera_url(user_input[CONF_CAM_URL]):
                 errors["base"] = "camera_url_invalid"
 
-            # info: validate the camera name
+            # info: validate the camera name excluding the editing camera
             camera_name = user_input.get("name")
             if not NAME_REGEX.match(camera_name):
                 errors["name"] = "invalid_characters"
-            elif any(device.name == camera_name for device in self.store.get_devices().values()):
+            elif any(device.name == camera_name for device in self.store.get_devices().values() if device.id != self.device_id):
                 errors["name"] = "name_not_unique"
 
             if not errors:

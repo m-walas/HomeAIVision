@@ -145,32 +145,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
-) -> bool:
-    """
-    Remove a config entry from a device.
+# NOTE: By adding the following function, we give the user the ability to permanently remove a device from the integration using the UI button.
+# NOTE: Not recommended, removing devices are implemented in options menu from config_flow.  
+# async def async_remove_config_entry_device(
+#     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+# ) -> bool:
+#     """
+#     Remove a config entry from a device.
 
-    This function handles the removal of a device from the integration,
-    including cleanup from the store and device/entity registry.
+#     This function handles the removal of a device from the integration,
+#     including cleanup from the store and device/entity registry.
 
-    Args:
-        hass (HomeAssistant): The Home Assistant instance.
-        config_entry (ConfigEntry): The configuration entry.
-        device_entry (DeviceEntry): The device entry to remove.
+#     Args:
+#         hass (HomeAssistant): The Home Assistant instance.
+#         config_entry (ConfigEntry): The configuration entry.
+#         device_entry (DeviceEntry): The device entry to remove.
 
-    Returns:
-        bool: True if the device was successfully removed, False otherwise.
-    """
-    _LOGGER.debug(f"[HomeAIVision] Removing device: {device_entry.id}")
+#     Returns:
+#         bool: True if the device was successfully removed, False otherwise.
+#     """
+#     _LOGGER.debug(f"[HomeAIVision] Removing device: {device_entry.id}")
 
-    store: HomeAIVisionStore = hass.data[DOMAIN].get('store')
-    if store is None:
-        _LOGGER.error("Store not found in hass.data")
-        return False
+#     store: HomeAIVisionStore = hass.data[DOMAIN].get('store')
+#     if store is None:
+#         _LOGGER.error("Store not found in hass.data")
+#         return False
 
-    # NOTE: Delete device from store
-    await store.async_remove_device(device_entry.id)
+#     # NOTE: Delete device from store
+#     await store.async_remove_device(device_entry.id)
 
-    _LOGGER.debug(f"[HomeAIVision] Device {device_entry.id} removed successfully")
-    return True
+#     _LOGGER.debug(f"[HomeAIVision] Device {device_entry.id} removed successfully")
+#     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Handle removal of an entry."""
+    _LOGGER.debug(f"[HomeAIVision] async_unload_entry called with entry.data: {entry.data}")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop('store', None)
+    return unload_ok

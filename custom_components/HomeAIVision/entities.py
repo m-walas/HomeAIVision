@@ -1,13 +1,16 @@
 import logging
+import asyncio
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect  # type: ignore
 from homeassistant.components.sensor import SensorEntity  # type: ignore
 from homeassistant.components.number import NumberEntity  # type: ignore
 from homeassistant.components.select import SelectEntity  # type: ignore
+from homeassistant.components.switch import SwitchEntity  # type: ignore
 from homeassistant.helpers.entity import Entity, EntityCategory  # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
+from .camera_processing import periodic_check
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +36,61 @@ class BaseHomeAIVisionEntity(Entity):
             "manufacturer": "HomeAIVision",
             "model": "Intelligent Camera",
         }
+
+
+# INFO: Important entity for arm/disarm functionality
+class ArmedSwitchEntity(BaseHomeAIVisionEntity, SwitchEntity):
+    """Entity representing the armed state of the camera."""
+
+    def __init__(self, hass, device_config):
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_armed"
+        self._attr_name = f"{self._device_name} Armed"
+        self._attr_entity_category = EntityCategory.CONFIG
+
+    @property
+    def is_on(self):
+        """Return True if the device is armed."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            return device_data.armed
+        return False
+
+    async def async_turn_on(self, **kwargs):
+        """Arm the device."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data and not device_data.armed:
+            device_data.armed = True
+            await self.store.async_update_device(self._device_id, device_data)
+            self.async_write_ha_state()
+            # info: Start the periodic check task
+            if self._device_id not in self.hass.data[DOMAIN]['camera_tasks']:
+                stop_event = asyncio.Event()
+                config_entry = self.hass.config_entries.async_get_entry(device_data.config_entry_id)
+                if not config_entry:
+                    _LOGGER.error(f"[HomeAIVision] Config entry not found for device {self._device_id}")
+                    return
+                task = self.hass.async_create_task(
+                    periodic_check(self.hass, config_entry, device_data.asdict(), stop_event)
+                )
+                self.hass.data[DOMAIN]['camera_tasks'][self._device_id] = (task, stop_event)
+                _LOGGER.debug(f"[HomeAIVision] Armed camera {self._device_id}, task started.")
+
+    async def async_turn_off(self, **kwargs):
+        """Disarm the device."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data and device_data.armed:
+            device_data.armed = False
+            await self.store.async_update_device(self._device_id, device_data)
+            self.async_write_ha_state()
+            # info: Cancel the periodic check task
+            camera_tasks = self.hass.data[DOMAIN].get('camera_tasks', {})
+            task_tuple = camera_tasks.pop(self._device_id, None)
+            if task_tuple:
+                task, stop_event = task_tuple
+                stop_event.set()
+                task.cancel()
+                _LOGGER.debug(f"[HomeAIVision] Disarmed camera {self._device_id}, task cancelled.")
 
 
 # INFO: Sensor entities

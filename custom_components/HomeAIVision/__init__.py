@@ -23,7 +23,7 @@ from .actions import (
 _LOGGER = logging.getLogger(__name__)
 
 # INFO: Define the platforms supported by this integration
-PLATFORMS = ["sensor", "number", "select"]
+PLATFORMS = ["sensor", "number", "select", "switch"]
 
 
 async def log_running_tasks_service(call: ServiceCall, hass: HomeAssistant):
@@ -141,12 +141,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         @callback
         def start_periodic_checks(event=None):
             """
-            Start periodic checks for all devices.
+            Start periodic checks for all armed devices.
             """
             _LOGGER.debug("[HomeAIVision] Starting periodic checks for all devices.")
             devices = store.get_devices()
             for device_config in devices.values():
-                if device_config.id not in hass.data[DOMAIN]['camera_tasks']:
+                # IMPORTANT: Only start periodic checks for armed devices
+                if device_config.id not in hass.data[DOMAIN]['camera_tasks'] and device_config.armed:
                     stop_event = asyncio.Event()
                     task = hass.async_create_task(
                         periodic_check(hass, entry, device_config.asdict(), stop_event)
@@ -175,13 +176,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """
             device_id = device['id']
             if device_id not in hass.data[DOMAIN]['camera_tasks']:
-                _LOGGER.debug(f"[HomeAIVision] Adding new device {device_id}.")
-                stop_event = asyncio.Event()
-                task = hass.async_create_task(
-                    periodic_check(hass, entry, device, stop_event)
-                )
-                hass.data[DOMAIN]['camera_tasks'][device_id] = (task, stop_event)
-                _LOGGER.debug(f"[HomeAIVision] Started periodic_check for device {device_id}")
+                # IMPORTANT: Check if the device is armed before starting periodic checks
+                if device.get('armed', False):
+                    _LOGGER.debug(f"[HomeAIVision] Adding and arming new device {device_id}.")
+                    stop_event = asyncio.Event()
+                    task = hass.async_create_task(
+                        periodic_check(hass, entry, device, stop_event)
+                    )
+                    hass.data[DOMAIN]['camera_tasks'][device_id] = (task, stop_event)
+                    _LOGGER.debug(f"[HomeAIVision] Started periodic_check for device {device_id}")
+                else:
+                    _LOGGER.debug(f"[HomeAIVision] Adding new device {device_id} without arming.")
+
 
         @callback
         def handle_device_removed(device):

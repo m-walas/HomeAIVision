@@ -25,6 +25,7 @@ class DeviceData:
     url = attr.ib(type=str)
     to_detect_object = attr.ib(type=str)
     azure_confidence_threshold = attr.ib(type=float)
+    armed = attr.ib(type=bool, default=False)
     send_notifications = attr.ib(type=bool, default=False)
     max_images_per_day = attr.ib(type=int, default=100)
     days_to_keep = attr.ib(type=int, default=30)
@@ -32,6 +33,7 @@ class DeviceData:
     motion_detection_history_size = attr.ib(type=int, default=10)
     motion_detection_interval = attr.ib(type=int, default=5)
     device_azure_request_count = attr.ib(type=int, default=0)
+    config_entry_id = attr.ib(type=str, default='')
 
     @classmethod
     def from_dict(cls, data):
@@ -45,6 +47,7 @@ class DeviceData:
             DeviceData: An instance of DeviceData.
         """
         # IMPORTANT: Provide default values for missing keys to maintain compatibility
+        data.setdefault('armed', False)
         data.setdefault('send_notifications', False)
         data.setdefault('max_images_per_day', 100)
         data.setdefault('days_to_keep', 30)
@@ -52,6 +55,7 @@ class DeviceData:
         data.setdefault('motion_detection_history_size', 10)
         data.setdefault('motion_detection_interval', 5)
         data.setdefault('device_azure_request_count', 0)
+        data.setdefault('config_entry_id', '')
 
         return cls(**data)
 

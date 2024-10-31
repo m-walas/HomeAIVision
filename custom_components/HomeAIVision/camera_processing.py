@@ -294,15 +294,16 @@ async def periodic_check(hass: HomeAssistant, entry: ConfigEntry, device_config:
                         f"Please ensure the camera is online and the URL is correct."
                     )
                     # NOTE: Create a persistent notification for connection errors
-                    await hass.async_add_executor_job(
-                        pn_create,
-                        hass,
-                        (
-                            f"Unable to connect to the camera at {cam_url}. "
-                            "Please ensure the camera is online and the URL is correct."
-                        ),
-                        title="HomeAIVision Camera Connection Error",
-                        notification_id=f"homeaivision_camera_error_{device_id}",
+                    await hass.async_create_task(
+                        pn_create(
+                            hass,
+                            (
+                                f"Unable to connect to the camera at {cam_url}. "
+                                "Please ensure the camera is online and the URL is correct."
+                            ),
+                            title="HomeAIVision Camera Connection Error",
+                            notification_id=f"homeaivision_camera_error_{device_id}",
+                        )
                     )
                 except asyncio.CancelledError:
                     _LOGGER.debug(f"[HomeAIVision] Camera check task for device {device_id} cancelled.")

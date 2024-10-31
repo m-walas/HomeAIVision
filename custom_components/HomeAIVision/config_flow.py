@@ -186,6 +186,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
             new_device = DeviceData(
                 id=device_id,
                 name=self.camera_data.get("name", "Camera"),
+                armed=False,
                 url=self.camera_data[CONF_CAM_URL],
                 to_detect_object=self.camera_data[CONF_TO_DETECT_OBJECT],
                 azure_confidence_threshold=self.camera_data[CONF_AZURE_CONFIDENCE_THRESHOLD],
@@ -195,6 +196,7 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, 6000),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, 10),
                 motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 5),
+                config_entry_id=self.config_entry.entry_id,
             )
 
             _LOGGER.debug(f"[HomeAIVision] Adding new device: {new_device.asdict()}")
@@ -306,6 +308,8 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, device.motion_detection_min_area),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, device.motion_detection_history_size,),
                 motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, device.motion_detection_interval),
+                device_azure_request_count=device.device_azure_request_count,
+                config_entry_id=device.config_entry_id,
             )
 
             await self.store.async_update_device(self.device_id, updated_device)

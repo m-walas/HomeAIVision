@@ -47,7 +47,7 @@
         "data": {
           "to_detect_object": "Choose which object to detect.",
           "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
+          "local_sensitivity_level": "Set the local sensitivity level for motion detection.",
           "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
           "motion_detection_interval": "Set the interval (in seconds) between motion detection checks."
         }
@@ -69,7 +69,7 @@
         "data": {
           "to_detect_object": "Choose which objects to detect.",
           "azure_confidence_threshold": "Set the minimum confidence threshold for object detection.",
-          "motion_detection_min_area": "Set the minimum motion detection area. Advanced setting; change only if necessary.",
+          "local_sensitivity_level": "Set the local sensitivity level for motion detection.",
           "motion_detection_history_size": "Set the motion detection history size. Advanced setting; change only if necessary.",
           "motion_detection_interval": "Set the interval (in seconds) between motion detection checks."
         }
@@ -132,6 +132,13 @@
         "cat": "Cat",
         "dog": "Dog",
         "unknown": "Unknown"
+      }
+    },
+    "local_sensitivity_level": {
+      "options": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
       }
     }
   }

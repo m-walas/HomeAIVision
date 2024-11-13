@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             schema=vol.Schema({})
         )
 
-        # NOTE: Forward setup to the specified platforms (sensor, number, select)
+        # NOTE: Forward setup to the specified platforms (sensor, number, select, switch)
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
         # NOTE: Define a callback to start periodic checks

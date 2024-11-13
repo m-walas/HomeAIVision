@@ -47,7 +47,7 @@
         "data": {
           "to_detect_object": "Wybierz obiekt do wykrycia.",
           "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
-          "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "local_sensitivity_level": "Ustaw poziom czułości lokalnego wykrywania ruchu.",
           "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
           "motion_detection_interval": "Ustaw interwał (w sekundach) między kontrolami wykrywania ruchu."
         }
@@ -69,7 +69,7 @@
         "data": {
           "to_detect_object": "Wybierz, który obiekt wykrywać.",
           "azure_confidence_threshold": "Ustaw minimalny próg pewności dla wykrywania obiektów.",
-          "motion_detection_min_area": "Ustaw minimalny obszar wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
+          "local_sensitivity_level": "Ustaw poziom czułości lokalnego wykrywania ruchu.",
           "motion_detection_history_size": "Ustaw rozmiar historii wykrywania ruchu. Ustawienie zaawansowane; zmieniaj tylko jeśli to konieczne.",
           "motion_detection_interval": "Ustaw interwał (w sekundach) między kontrolami wykrywania ruchu."
         }
@@ -132,6 +132,13 @@
         "cat": "Kot",
         "dog": "Pies",
         "unknown": "Nieznany"
+      }
+    },
+    "local_sensitivity_level": {
+      "options": {
+        "low": "Niski",
+        "medium": "Średni",
+        "high": "Wysoki"
       }
     }
   }

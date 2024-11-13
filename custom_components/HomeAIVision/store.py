@@ -29,10 +29,10 @@ class DeviceData:
     send_notifications = attr.ib(type=bool, default=False)
     max_images_per_day = attr.ib(type=int, default=100)
     days_to_keep = attr.ib(type=int, default=30)
-    motion_detection_min_area = attr.ib(type=int, default=6000)
     motion_detection_history_size = attr.ib(type=int, default=10)
     motion_detection_interval = attr.ib(type=int, default=5)
     device_azure_request_count = attr.ib(type=int, default=0)
+    local_sensitivity_level = attr.ib(type=str, default='medium')
     config_entry_id = attr.ib(type=str, default='')
 
     @classmethod
@@ -51,10 +51,10 @@ class DeviceData:
         data.setdefault('send_notifications', False)
         data.setdefault('max_images_per_day', 100)
         data.setdefault('days_to_keep', 30)
-        data.setdefault('motion_detection_min_area', 6000)
         data.setdefault('motion_detection_history_size', 10)
         data.setdefault('motion_detection_interval', 5)
         data.setdefault('device_azure_request_count', 0)
+        data.setdefault('local_sensitivity_level', 'medium')
         data.setdefault('config_entry_id', '')
 
         return cls(**data)

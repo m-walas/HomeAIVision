@@ -38,8 +38,10 @@ config_entries.json
 # Ignore js.map
 *.js.map
 
-# Ignore previous versions in backup folders
+# Ignore previous versions in backup folders and docs sketches
+backup/
 ver*/
+documentation/sketches/*
 
 # Icons - send to HACS 
 assets/

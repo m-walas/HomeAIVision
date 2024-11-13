@@ -47,7 +47,7 @@
         "data": {
           "to_detect_object": "Choisissez quels objets détecter.",
           "azure_confidence_threshold": "Définissez le seuil de confiance minimal pour la détection d'objets.",
-          "motion_detection_min_area": "Définissez la zone minimale de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "local_sensitivity_level": "Définissez le niveau de sensibilité local pour la détection de mouvement.",
           "motion_detection_history_size": "Définissez la taille de l'historique de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
           "motion_detection_interval": "Définissez l'intervalle (en secondes) entre les vérifications de détection de mouvement."
         }
@@ -69,7 +69,7 @@
         "data": {
           "to_detect_object": "Choisissez quels objets détecter.",
           "azure_confidence_threshold": "Définissez le seuil de confiance minimal pour la détection d'objets.",
-          "motion_detection_min_area": "Définissez la zone minimale de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
+          "local_sensitivity_level": "Définissez le niveau de sensibilité local pour la détection de mouvement.",
           "motion_detection_history_size": "Définissez la taille de l'historique de détection de mouvement. Paramètre avancé ; ne modifiez que si nécessaire.",
           "motion_detection_interval": "Définissez l'intervalle (en secondes) entre les vérifications de détection de mouvement."
         }
@@ -132,6 +132,13 @@
         "cat": "Chat",
         "dog": "Chien",
         "unknown": "Inconnu"
+      }
+    },
+    "local_sensitivity_level": {
+      "options": {
+        "low": "Faible",
+        "medium": "Moyenne",
+        "high": "Élevée"
       }
     }
   }

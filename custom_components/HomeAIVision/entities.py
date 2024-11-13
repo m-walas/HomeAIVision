@@ -403,6 +403,41 @@ class DetectedObjectEntity(BaseHomeAIVisionEntity, SelectEntity):
             _LOGGER.error(f"Invalid option selected: {option}")
 
 
+class LocalSensitivityLevelEntity(BaseHomeAIVisionEntity, SelectEntity):
+    """Entity representing the local sensitivity level."""
+
+    def __init__(self, hass, device_config):
+        super().__init__(hass, device_config)
+        self._attr_unique_id = f"{self._device_id}_local_sensitivity_level"
+        self._attr_name = f"{self._device_name} Local Sensitivity Level"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._options = ['low', 'medium', 'high']
+
+    @property
+    def options(self):
+        """Return a list of selectable options."""
+        return self._options
+
+    @property
+    def current_option(self):
+        """Return the currently selected sensitivity level."""
+        device_data = self.store.get_device(self._device_id)
+        if device_data:
+            return device_data.local_sensitivity_level
+        return None
+
+    async def async_select_option(self, option: str):
+        """Set a new sensitivity level option."""
+        if option in self._options:
+            device_data = self.store.get_device(self._device_id)
+            if device_data:
+                device_data.local_sensitivity_level = option
+                await self.store.async_update_device(self._device_id, device_data)
+                self.async_write_ha_state()
+        else:
+            _LOGGER.error(f"Invalid local sensitivity level selected: {option}")
+
+
 # INFO: Global sensor entities
 class GlobalAzureRequestCountEntity(SensorEntity):
     """Entity representing the global Azure request count."""

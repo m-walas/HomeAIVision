@@ -24,9 +24,9 @@ from .const import (
     CONF_TO_DETECT_OBJECT,
     CONF_AZURE_CONFIDENCE_THRESHOLD,
     CONF_INTEGRATION_TITLE,
-    CONF_MOTION_DETECTION_MIN_AREA,
     CONF_MOTION_DETECTION_HISTORY_SIZE,
     CONF_MOTION_DETECTION_INTERVAL,
+    CONF_LOCAL_SENSITIVITY_LEVEL,
 )
 from .store import HomeAIVisionStore, DeviceData
 
@@ -193,9 +193,9 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, False),
                 max_images_per_day=self.camera_data.get(CONF_MAX_IMAGES_PER_DAY, 100),
                 days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, 30),
-                motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, 6000),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, 10),
                 motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, 5),
+                local_sensitivity_level=self.camera_data.get(CONF_LOCAL_SENSITIVITY_LEVEL, "medium"),
                 config_entry_id=self.config_entry.entry_id,
             )
 
@@ -217,7 +217,12 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     }
                 }),
                 vol.Required(CONF_AZURE_CONFIDENCE_THRESHOLD, default=0.6): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
-                vol.Optional(CONF_MOTION_DETECTION_MIN_AREA, default=6000): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Required(CONF_LOCAL_SENSITIVITY_LEVEL, default='medium'): selector({
+                    "select": {
+                        "options": ["low", "medium", "high"],
+                        "translation_key": "local_sensitivity_level",
+                    }
+                }),
                 vol.Optional(CONF_MOTION_DETECTION_HISTORY_SIZE, default=10): vol.All(vol.Coerce(int), vol.Range(min=2)),
                 vol.Optional(CONF_MOTION_DETECTION_INTERVAL, default=5): vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
             }),
@@ -305,10 +310,10 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                 send_notifications=self.camera_data.get(CONF_SEND_NOTIFICATIONS, device.send_notifications),
                 max_images_per_day=self.camera_data.get(CONF_MAX_IMAGES_PER_DAY, device.max_images_per_day),
                 days_to_keep=self.camera_data.get(CONF_DAYS_TO_KEEP, device.days_to_keep),
-                motion_detection_min_area=self.camera_data.get(CONF_MOTION_DETECTION_MIN_AREA, device.motion_detection_min_area),
                 motion_detection_history_size=self.camera_data.get(CONF_MOTION_DETECTION_HISTORY_SIZE, device.motion_detection_history_size,),
                 motion_detection_interval=self.camera_data.get(CONF_MOTION_DETECTION_INTERVAL, device.motion_detection_interval),
                 device_azure_request_count=device.device_azure_request_count,
+                local_sensitivity_level=self.camera_data.get(CONF_LOCAL_SENSITIVITY_LEVEL, device.local_sensitivity_level),
                 config_entry_id=device.config_entry_id,
             )
 
@@ -337,10 +342,15 @@ class HomeAIVisionOptionsFlow(config_entries.OptionsFlow):
                     CONF_AZURE_CONFIDENCE_THRESHOLD,
                     default=device.azure_confidence_threshold,
                 ): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1)),
-                vol.Optional(
-                    CONF_MOTION_DETECTION_MIN_AREA,
-                    default=device.motion_detection_min_area,
-                ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Required(
+                    CONF_LOCAL_SENSITIVITY_LEVEL,
+                    default=device.local_sensitivity_level,
+                ): selector({
+                    "select": {
+                        "options": ["low", "medium", "high"],
+                        "translation_key": "local_sensitivity_level",
+                    }
+                }),
                 vol.Optional(
                     CONF_MOTION_DETECTION_HISTORY_SIZE,
                     default=device.motion_detection_history_size,

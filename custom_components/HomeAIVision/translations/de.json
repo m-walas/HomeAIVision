@@ -47,7 +47,7 @@
         "data": {
           "to_detect_object": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
           "azure_confidence_threshold": "Legen Sie den minimalen Konfidenzschwellenwert für die Objekterkennung fest.",
-          "motion_detection_min_area": "Stellen Sie den minimalen Bewegungsmessbereich ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
+          "local_sensitivity_level": "Legen Sie den lokalen Empfindlichkeitsgrad für die Bewegungserkennung fest.",
           "motion_detection_history_size": "Stellen Sie die Größe des Bewegungserkennungsspeichers ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
           "motion_detection_interval": "Stellen Sie das Intervall (in Sekunden) zwischen den Bewegungserkennungskontrollen ein."
         }
@@ -69,7 +69,7 @@
         "data": {
           "to_detect_object": "Wählen Sie aus, welche Objekte erkannt werden sollen.",
           "azure_confidence_threshold": "Legen Sie den minimalen Konfidenzschwellenwert für die Objekterkennung fest.",
-          "motion_detection_min_area": "Stellen Sie den minimalen Bewegungsmessbereich ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
+          "local_sensitivity_level": "Legen Sie den lokalen Empfindlichkeitsgrad für die Bewegungserkennung fest.",
           "motion_detection_history_size": "Stellen Sie die Größe des Bewegungserkennungsspeichers ein. Erweiterte Einstellung; ändern Sie sie nur bei Bedarf.",
           "motion_detection_interval": "Stellen Sie das Intervall (in Sekunden) zwischen den Bewegungserkennungskontrollen ein."
         }
@@ -132,6 +132,13 @@
         "cat": "Katze",
         "dog": "Hund",
         "unknown": "Unbekannt"
+      }
+    },
+    "local_sensitivity_level": {
+      "options": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch"
       }
     }
   }

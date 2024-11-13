@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant  # type: ignore
 
 from .const import DOMAIN
 from .store import HomeAIVisionStore
-from .entities import DetectedObjectEntity
+from .entities import DetectedObjectEntity, LocalSensitivityLevelEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         entities.extend([
             # NOTE: ONLY select entities are being set up here
             DetectedObjectEntity(hass, device_config),
+            LocalSensitivityLevelEntity(hass, device_config),
         ])
 
     if entities:

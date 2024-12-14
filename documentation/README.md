@@ -1,6 +1,6 @@
 # HomeAIVision Integration for Home Assistant
 
-![HomeAIVision Banner](../images/main.png)
+![HomeAIVision Banner](../images/baner.png)
 
 Welcome to **HomeAIVision**! Enhance your Home Assistant setup with advanced AI vision capabilities powered by Azure Cognitive Services. HomeAIVision analyzes your home camera feeds in real-time to detect human presence and other objects, ensuring you receive only the notifications that matter.
 

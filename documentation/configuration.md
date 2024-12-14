@@ -54,14 +54,13 @@ For each camera device you add, you can configure the following parameters:
 | `name`                     | Friendly name for the camera.                          | `Camera`  |
 | `cam_url`                  | URL to access the camera feed.                         |           |
 | `send_notifications`       | Enable or disable notifications upon detection.        | `False`   |
-| `organize_by_day`          | Organize saved images by day.                          | `True`    |
-| `max_images`               | Maximum number of images to store per folder or in total. | `30`     |
-| `days_to_keep`             | Number of days to keep images if organized by day.     | `7`       |
+| `max_images`               | Maximum number of images to store per device.          | `100`     |
+| `days_to_keep`             | Number of days to keep images.                         | `30`      |
 | `to_detect_object`         | Select which objects to detect (e.g., person, car, cat, dog). | `person` |
-| `azure_confidence_threshold` | Minimum confidence threshold for detections.        | `0.6`     |
-| `motion_detection_min_area` | Minimum area (in pixels) for motion detection.        | `6000`    |
+| `azure_confidence_threshold` | Minimum confidence threshold for detections.         | `0.6`     |
+| `local_sensitivity_level` | Local motion detection sensitivity.                     | `medium`  |
 | `motion_detection_history_size` | Number of historical motion scores to maintain for dynamic thresholding. | `10`  |
-| `motion_detection_interval` | Interval (in seconds) between motion detection checks. | `5`       |
+| `motion_detection_interval` | Interval (in seconds) between motion detection checks. | `5`      |
 
 ### Configuration Parameters
 
@@ -93,12 +92,11 @@ Each camera device added to HomeAIVision can be individually configured with the
 | `name`                     | Friendly name for the camera.                          | `Camera`  |
 | `cam_url`                  | URL to access the camera feed.                         |           |
 | `send_notifications`       | Enable or disable notifications upon detection.        | `False`   |
-| `organize_by_day`          | Organize saved images by day.                          | `True`    |
-| `max_images`               | Maximum number of images to store per folder or in total. | `30`     |
-| `days_to_keep`             | Number of days to keep images if organized by day.     | `7`       |
+| `max_images`               | Maximum number of images to store per device.          | `100`     |
+| `days_to_keep`             | Number of days to keep images.                         | `30`      |
 | `to_detect_object`         | Select which objects to detect (e.g., person, car, cat, dog). | `person` |
-| `azure_confidence_threshold` | Minimum confidence threshold for detections.        | `0.6`     |
-| `motion_detection_min_area` | Minimum area (in pixels) for motion detection.        | `6000`    |
+| `azure_confidence_threshold` | Minimum confidence threshold for detections.         | `0.6`     |
+| `local_sensitivity_level` | Local motion detection sensitivity.                     | `medium`  |
 | `motion_detection_history_size` | Number of historical motion scores to maintain for dynamic thresholding. | `10`  |
 | `motion_detection_interval` | Interval (in seconds) between motion detection checks. | `5`       |
 
@@ -110,12 +108,11 @@ homeaivision:
     - name: "Front Door Camera"
       cam_url: "http://camera.local/stream"
       send_notifications: true
-      organize_by_day: true
-      max_images: 50
-      days_to_keep: 10
+      max_images: 100
+      days_to_keep: 30
       to_detect_object: "person"
       azure_confidence_threshold: 0.7
-      motion_detection_min_area: 8000
+      local_sensitivity_level: "medium"
       motion_detection_history_size: 15
       motion_detection_interval: 5
 ```

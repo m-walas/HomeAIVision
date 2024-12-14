@@ -71,7 +71,6 @@ async def periodic_check(hass: HomeAssistant, entry: ConfigEntry, device_config:
             unknown_object_counter = 0                              # info: Counter for unknown objects
             max_unknown_object_counter = 20                         # info: Max count before emergency notification
             azure_request_intervals = [0, 1, 2, 3, 4, 10, 15, 20]   # info: Intervals for Azure requests
-            outlier_multiplier = 5                                  # info: Multiplier for determining outliers
 
             while not stop_event.is_set():
                 try:
@@ -122,113 +121,62 @@ async def periodic_check(hass: HomeAssistant, entry: ConfigEntry, device_config:
                                     continue
 
                                 if not object_present:
-                                    if should_process:
-                                        # NOTE: Update motion history
-                                        motion_history.append(motion_score)
-                                        _LOGGER.debug(f"Motion history size: {len(motion_history)}")
-                                        if len(motion_history) > motion_detection_history_size:
-                                            motion_history.pop(0)
-                                        # important: Recalculate dynamic threshold
-                                        if len(motion_history) >= 2:
-                                            med_motion = median(motion_history)
-                                            mad_motion = median([abs(m - med_motion) for m in motion_history])
-                                            dynamic_threshold = med_motion + 2 * mad_motion
-                                            dynamic_threshold = max(min_dynamic_threshold, min(dynamic_threshold, max_dynamic_threshold))
-                                        else:
-                                            dynamic_threshold = motion_detection_min_area
-                                        _LOGGER.debug(f"Dynamic motion threshold: {dynamic_threshold}, current motion score: {motion_score}")
+                                    # NOTE: Update motion history
+                                    motion_history.append(motion_score)
+                                    _LOGGER.debug(f"Motion history size: {len(motion_history)}")
+                                    if len(motion_history) > motion_detection_history_size:
+                                        motion_history.pop(0)
+                                    # important: Recalculate dynamic threshold
+                                    if len(motion_history) >= 2:
+                                        med_motion = median(motion_history)
+                                        mad_motion = median([abs(m - med_motion) for m in motion_history])
+                                        dynamic_threshold = med_motion + 2 * mad_motion
+                                        dynamic_threshold = max(min_dynamic_threshold, min(dynamic_threshold, max_dynamic_threshold))
+                                    else:
+                                        dynamic_threshold = motion_detection_min_area
+                                    _LOGGER.debug(f"Dynamic motion threshold: {dynamic_threshold}, current motion score: {motion_score}")
 
-                                        if motion_score > dynamic_threshold:
-                                            _LOGGER.debug(f"Significant motion detected. Motion score: {motion_score}")
+                                    if motion_score > dynamic_threshold:
+                                        _LOGGER.debug(f"Significant motion detected. Motion score: {motion_score}")
 
-                                            # IMPORTANT: Decide whether to send a request to Azure
-                                            if unknown_object_counter in azure_request_intervals:
-                                                _LOGGER.debug(f"Sending image to Azure for analysis. Counter: {unknown_object_counter}")
+                                        # IMPORTANT: Decide whether to send a request to Azure
+                                        if unknown_object_counter in azure_request_intervals:
+                                            _LOGGER.debug(f"Sending image to Azure for analysis. Counter: {unknown_object_counter}")
 
-                                                # NOTE: Motion detected, send image to Azure
-                                                detected, modified_image_data, detected_object_name = await analyze_image_with_azure(
-                                                    image_data,
-                                                    entry.data.get(CONF_AZURE_API_KEY),
-                                                    entry.data.get(CONF_AZURE_ENDPOINT),
-                                                    to_detect_object,
-                                                    azure_confidence_threshold,
+                                            # NOTE: Motion detected, send image to Azure
+                                            detected, modified_image_data, detected_object_name = await analyze_image_with_azure(
+                                                image_data,
+                                                entry.data.get(CONF_AZURE_API_KEY),
+                                                entry.data.get(CONF_AZURE_ENDPOINT),
+                                                to_detect_object,
+                                                azure_confidence_threshold,
+                                            )
+
+                                            # NOTE: Increase the request count for the device
+                                            device = store.get_device(device_id)
+                                            if device:
+                                                device.device_azure_request_count += 1
+                                                await store.async_save()
+                                                async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
+                                                _LOGGER.info(f"[HomeAIVision] Device {device_id} Azure request count: {device.device_azure_request_count}")
+                                            else:
+                                                _LOGGER.error(
+                                                    f"[HomeAIVision] Device {device_id} not found in store"
                                                 )
 
-                                                # NOTE: Increase the request count for the device
-                                                device = store.get_device(device_id)
-                                                if device:
-                                                    device.device_azure_request_count += 1
-                                                    await store.async_save()
-                                                    async_dispatcher_send(hass, f"{DOMAIN}_{device_id}_update")
-                                                    _LOGGER.info(f"[HomeAIVision] Device {device_id} Azure request count: {device.device_azure_request_count}")
-                                                else:
-                                                    _LOGGER.error(
-                                                        f"[HomeAIVision] Device {device_id} not found in store"
-                                                    )
+                                            # NOTE: Increase the global request count
+                                            await store.async_increment_global_counter()
+                                            _LOGGER.info(f"[HomeAIVision] Global Azure request counter: {store.get_global_counter()}")
 
-                                                # NOTE: Increase the global request count
-                                                await store.async_increment_global_counter()
-                                                _LOGGER.info(f"[HomeAIVision] Global Azure request counter: {store.get_global_counter()}")
-
-                                                if detected:
-                                                    # warning: Object is being present now
-                                                    object_present = True
-                                                    _LOGGER.debug(f"Object '{detected_object_name}' detected by Azure.")
-                                                    # info: Reset unknown_object_counter
-                                                    unknown_object_counter = 0
-                                                else:
-                                                    _LOGGER.debug("No target object detected by Azure.")
-                                                    # warning: Increment unknown_object_counter
-                                                    unknown_object_counter += 1
-
-                                                    if unknown_object_counter >= max_unknown_object_counter:
-                                                        _LOGGER.info("Unknown object detected multiple times without recognition.")
-                                                        # IMPORTANT: Send emergency notification
-                                                        if send_notifications:
-                                                            language = store.get_language()
-                                                            _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
-                                                            await send_notification(
-                                                                hass,
-                                                                "unknown_object",
-                                                                image_path=None,
-                                                                notification_language=language,
-                                                            )
-                                                        # IMPORTANT: Update reference image after reaching max detections
-                                                        reference_age = time.monotonic() - reference_image_time
-                                                        _LOGGER.info(f"Updating reference image after {unknown_object_counter} unknown detections. Old reference image age: {reference_age:.2f} seconds.")
-                                                        reference_image = current_image
-                                                        reference_image_time = time.monotonic()
-                                                        motion_history.clear()
-                                                        # info: Reset unknown_object_counter
-                                                        unknown_object_counter = 0
-
-                                                # NOTE: Save the image if an object is detected
-                                                if detected and modified_image_data:
-                                                    device_name = device_config['name']
-                                                    save_path = await save_image(
-                                                        cam_frames_path,
-                                                        device_name,
-                                                        modified_image_data,
-                                                        max_images_per_day,
-                                                        days_to_keep,
-                                                    )
-                                                    # NOTE: Send notification if enabled
-                                                    if send_notifications:
-                                                        language = store.get_language()
-                                                        _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
-                                                        relative_path = save_path.replace(
-                                                            hass.config.path(), ""
-                                                        ).lstrip("/")
-                                                        await send_notification(
-                                                            hass,
-                                                            detected_object_name,
-                                                            relative_path,
-                                                            notification_language=language,
-                                                        )
-                                                    # warning: Reset motion history
-                                                    motion_history.clear()
+                                            if detected:
+                                                # warning: Object is being present now
+                                                object_present = True
+                                                _LOGGER.debug(f"Object '{detected_object_name}' detected by Azure.")
+                                                # info: Reset unknown_object_counter
+                                                unknown_object_counter = 0
                                             else:
-                                                _LOGGER.debug(f"Skipping Azure analysis at counter {unknown_object_counter}.")
+                                                _LOGGER.debug("No target object detected by Azure.")
+                                                # warning: Increment unknown_object_counter
                                                 unknown_object_counter += 1
 
                                                 if unknown_object_counter >= max_unknown_object_counter:
@@ -251,14 +199,64 @@ async def periodic_check(hass: HomeAssistant, entry: ConfigEntry, device_config:
                                                     motion_history.clear()
                                                     # info: Reset unknown_object_counter
                                                     unknown_object_counter = 0
+
+                                            # NOTE: Save the image if an object is detected
+                                            if detected and modified_image_data:
+                                                device_name = device_config['name']
+                                                save_path = await save_image(
+                                                    cam_frames_path,
+                                                    device_name,
+                                                    modified_image_data,
+                                                    max_images_per_day,
+                                                    days_to_keep,
+                                                )
+                                                # NOTE: Send notification if enabled
+                                                if send_notifications:
+                                                    language = store.get_language()
+                                                    _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
+                                                    relative_path = save_path.replace(
+                                                        hass.config.path(), ""
+                                                    ).lstrip("/")
+                                                    await send_notification(
+                                                        hass,
+                                                        detected_object_name,
+                                                        relative_path,
+                                                        notification_language=language,
+                                                    )
+                                                # warning: Reset motion history
+                                                motion_history.clear()
                                         else:
-                                            _LOGGER.debug(f"No significant motion detected. Motion score: {motion_score}")
-                                            # info: Update reference image periodically when no motion is detected
-                                            reference_image = current_image
-                                            reference_image_time = time.monotonic()
-                                            _LOGGER.debug("Reference image updated.")
-                                            # info: reset unknown_object_counter
-                                            unknown_object_counter = 0
+                                            _LOGGER.debug(f"Skipping Azure analysis at counter {unknown_object_counter}.")
+                                            unknown_object_counter += 1
+
+                                            if unknown_object_counter >= max_unknown_object_counter:
+                                                _LOGGER.info("Unknown object detected multiple times without recognition.")
+                                                # IMPORTANT: Send emergency notification
+                                                if send_notifications:
+                                                    language = store.get_language()
+                                                    _LOGGER.debug(f"[HomeAIVision] Notification language: {language}")
+                                                    await send_notification(
+                                                        hass,
+                                                        "unknown_object",
+                                                        image_path=None,
+                                                        notification_language=language,
+                                                    )
+                                                # IMPORTANT: Update reference image after reaching max detections
+                                                reference_age = time.monotonic() - reference_image_time
+                                                _LOGGER.info(f"Updating reference image after {unknown_object_counter} unknown detections. Old reference image age: {reference_age:.2f} seconds.")
+                                                reference_image = current_image
+                                                reference_image_time = time.monotonic()
+                                                motion_history.clear()
+                                                # info: Reset unknown_object_counter
+                                                unknown_object_counter = 0
+                                    else:
+                                        _LOGGER.debug(f"No significant motion detected. Motion score: {motion_score}")
+                                        # info: Update reference image periodically when no motion is detected
+                                        reference_image = current_image
+                                        reference_image_time = time.monotonic()
+                                        _LOGGER.debug("Reference image updated.")
+                                        # info: reset unknown_object_counter
+                                        unknown_object_counter = 0
                                 else:
                                     # info: Object is present, check if it has left the scene
                                     if motion_score < motion_detection_min_area:

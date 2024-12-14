@@ -1,6 +1,6 @@
 # HomeAIVision Integration for Home Assistant
 
-![HomeAIVision Banner](images/main.png)
+![HomeAIVision Banner](images/baner.png)
 
 Welcome to **HomeAIVision**! I'm here to make your home safer and smarter by bringing advanced AI vision capabilities right into your Home Assistant setup. Utilizing Azure Cognitive Services, I can analyze your home camera feed in real-time to detect human presence and other objects, ensuring that you only receive notifications that matter.
 
@@ -54,7 +54,6 @@ Before installing HomeAIVision, ensure you have the following prerequisites:
 | `azure_endpoint`              | Endpoint URL for Azure Cognitive Services.            |         |
 | `cam_url`                     | URL to access the camera feed.                        |         |
 | `send_notifications`          | Enable or disable notifications.                      | `False` |
-| `organize_by_day`             | Organize saved images by day.                         | `True`  |
 | `to_detect_object`            | Select which objects to detect (e.g., person, car).   | `person`|
 | `azure_confidence_threshold`  | Minimum confidence threshold for detections.          | `0.6`   |
 | `motion_detection_min_area`   | Minimum area for motion detection.                    | `6000`  |
@@ -65,8 +64,8 @@ Before installing HomeAIVision, ensure you have the following prerequisites:
 
 | Parameter                | Description                                       | Default |
 |--------------------------|---------------------------------------------------|---------|
-| `max_images`             | Max images per folder or in total.                | `30`    |
-| `days_to_keep`           | Days to keep images if organized by day.          | `7`     |
+| `max_images`             | Max images per device.                            | `100`    |
+| `days_to_keep`           | Days to keep images.                              | `30`     |
 | `notification_language`  | Notification language.                            | `English` |
 
 ![config_flow](images/config_flow.png)

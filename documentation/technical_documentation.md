@@ -107,7 +107,7 @@ The HomeAIVision integration is designed to seamlessly integrate advanced AI vis
 **Purpose**: Manages the saving, organizing, and cleaning of images captured by the integration.
 
 - **Key Components**:
-  - `save_image`: Saves images to the designated directory, organizing them by day if configured, and enforces storage limits.
+  - `save_image`: Saves images to the designated directory, organizing them by day and enforces storage limits.
   - `clean_up_old_images`: Removes images that exceed the retention policy based on the number of days to keep.
 
 ### Store (store.py)
@@ -182,7 +182,7 @@ The HomeAIVision integration is designed to seamlessly integrate advanced AI vis
 
 ### save_image
 
-- **Purpose**: Saves an image to the filesystem, organizing it into daily folders if configured, and enforcing storage limits.
+- **Purpose**: Saves an image to the filesystem, organizing it into daily folders and enforcing storage limits.
 
 ### HomeAIVisionStore.async_load
 

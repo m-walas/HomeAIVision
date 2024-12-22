@@ -1,0 +1,18 @@
+// .devcontainer/devcontainer.json
+{
+  "name": "HomeAIVision DevContainer",
+  "image": "ghcr.io/home-assistant/devcontainer:supervisor",
+  "postCreateCommand": "pip install -e . && pip install pytest pytest-asyncio pytest-homeassistant-custom-component",
+  "forwardPorts": [8123],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "ms-python.pylint"
+      ]
+    }
+  }
+}
